@@ -1,0 +1,61 @@
+@import "variables";
+
+// Responsive Breakpoints
+@mixin respond-to($breakpoint) {
+  @if $breakpoint == sm {
+    @media (min-width: $breakpoint-sm) {
+      @content;
+    }
+  }
+  @if $breakpoint == md {
+    @media (min-width: $breakpoint-md) {
+      @content;
+    }
+  }
+  @if $breakpoint == lg {
+    @media (min-width: $breakpoint-lg) {
+      @content;
+    }
+  }
+  @if $breakpoint == xl {
+    @media (min-width: $breakpoint-xl) {
+      @content;
+    }
+  }
+}
+
+// Button Variants
+@mixin button-variant($bg-color, $text-color: white) {
+  background-color: $bg-color;
+  color: $text-color;
+  border: 1px solid $bg-color;
+
+  &:hover {
+    background-color: darken($bg-color, 10%);
+    border-color: darken($bg-color, 10%);
+  }
+
+  &:disabled {
+    background-color: lighten($bg-color, 20%);
+    border-color: lighten($bg-color, 20%);
+    opacity: 0.6;
+  }
+}
+
+// Focus States
+@mixin focus-ring($color: $primary-color) {
+  &:focus {
+    outline: none;
+    border-color: $color;
+    box-shadow: 0 0 0 2px rgba($color, 0.25);
+  }
+}
+
+// Card Styles
+@mixin card-style {
+  background: white;
+  border: 1px solid lighten($secondary-color, 30%);
+  border-radius: $border-radius;
+  box-shadow: $box-shadow;
+  padding: $card-padding;
+}

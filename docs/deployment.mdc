@@ -1,0 +1,567 @@
+# Deployment Documentation
+
+## Overview
+
+This document outlines the deployment strategy for the Error Find Quiz application using Firebase Hosting. Firebase provides a robust, scalable hosting solution with excellent performance and global CDN distribution.
+
+## Firebase Hosting Setup
+
+### Prerequisites
+
+1. **Node.js**: Version 18+ required
+2. **Firebase CLI**: Install globally
+3. **Firebase Account**: Create account at [firebase.google.com](https://firebase.google.com)
+4. **Git**: For version control
+
+### Installation Steps
+
+```bash
+# Install Firebase CLI globally
+npm install -g firebase-tools
+
+# Login to Firebase
+firebase login
+
+# Initialize Firebase project
+firebase init hosting
+```
+
+### Firebase Configuration
+
+#### firebase.json
+
+```json
+{
+  "hosting": {
+    "public": "build",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**",
+      "**/src/**",
+      "**/docs/**",
+      "**/*.md"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ],
+    "headers": [
+      {
+        "source": "**/*.@(js|css)",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "max-age=31536000"
+          }
+        ]
+      },
+      {
+        "source": "**/*.@(png|jpg|jpeg|gif|ico|svg)",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "max-age=31536000"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+#### .firebaserc
+
+```json
+{
+  "projects": {
+    "default": "your-project-id"
+  }
+}
+```
+
+## Build Configuration
+
+### Vite Configuration
+
+#### vite.config.ts
+
+```typescript
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import { resolve } from "path";
+
+export default defineConfig({
+  plugins: [react()],
+  base: "/", // Firebase hosting root
+  build: {
+    outDir: "build",
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ["react", "react-dom"],
+          router: ["react-router-dom"],
+          query: ["@tanstack/react-query"],
+        },
+      },
+    },
+  },
+  resolve: {
+    alias: {
+      "@": resolve(__dirname, "./src"),
+    },
+  },
+});
+```
+
+### Environment Configuration
+
+#### .env.production
+
+```bash
+VITE_API_URL=https://s3.eu-west-2.amazonaws.com/interview.mock.data/payload.json
+VITE_APP_NAME=Error Find Quiz
+VITE_APP_VERSION=1.0.0
+```
+
+#### .env.development
+
+```bash
+VITE_API_URL=https://s3.eu-west-2.amazonaws.com/interview.mock.data/payload.json
+VITE_APP_NAME=Error Find Quiz (Development)
+VITE_APP_VERSION=1.0.0-dev
+```
+
+## Build Process
+
+### Package.json Scripts
+
+```json
+{
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "build:analyze": "npm run build && npx vite-bundle-analyzer build",
+    "preview": "vite preview",
+    "deploy": "npm run build && firebase deploy",
+    "deploy:preview": "npm run build && firebase hosting:channel:deploy preview",
+    "deploy:production": "npm run build && firebase deploy --only hosting"
+  }
+}
+```
+
+### Build Optimization
+
+#### Bundle Analysis
+
+```bash
+# Install bundle analyzer
+npm install --save-dev vite-bundle-analyzer
+
+# Analyze bundle size
+npm run build:analyze
+```
+
+#### Build Output Structure
+
+```
+build/
+├── index.html
+├── assets/
+│   ├── index-[hash].js
+│   ├── index-[hash].css
+│   ├── vendor-[hash].js
+│   └── query-[hash].js
+└── favicon.ico
+```
+
+## Deployment Workflow
+
+### Manual Deployment
+
+```bash
+# Build the application
+npm run build
+
+# Deploy to Firebase
+firebase deploy
+
+# Deploy only hosting (faster)
+firebase deploy --only hosting
+```
+
+### Automated Deployment with GitHub Actions
+
+#### .github/workflows/deploy.yml
+
+```yaml
+name: Deploy to Firebase Hosting
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build application
+        run: npm run build
+
+      - name: Deploy to Firebase
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: "${{ secrets.GITHUB_TOKEN }}"
+          firebaseServiceAccount: "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}"
+          channelId: live
+          projectId: your-project-id
+```
+
+### Preview Deployments
+
+```bash
+# Deploy to preview channel
+firebase hosting:channel:deploy preview
+
+# Deploy to specific channel
+firebase hosting:channel:deploy feature-branch-name
+```
+
+## Performance Optimization
+
+### Firebase Hosting Features
+
+#### Automatic Compression
+
+Firebase Hosting automatically compresses:
+
+- HTML, CSS, JS files (gzip)
+- Images (WebP conversion)
+- Static assets
+
+#### CDN Distribution
+
+- Global CDN with 200+ edge locations
+- Automatic HTTPS
+- HTTP/2 support
+- Edge caching
+
+### Application Performance
+
+#### Code Splitting
+
+```typescript
+// Lazy load routes
+const QuizPage = lazy(() => import("./pages/QuizPage"));
+const ScorePage = lazy(() => import("./pages/ScorePage"));
+
+// Lazy load components
+const HeavyComponent = lazy(() => import("./components/HeavyComponent"));
+```
+
+#### Asset Optimization
+
+```typescript
+// vite.config.ts
+export default defineConfig({
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ["react", "react-dom"],
+          router: ["react-router-dom"],
+          query: ["@tanstack/react-query"],
+        },
+      },
+    },
+  },
+});
+```
+
+### Caching Strategy
+
+#### Static Assets
+
+```json
+// firebase.json
+{
+  "headers": [
+    {
+      "source": "**/*.@(js|css)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "max-age=31536000"
+        }
+      ]
+    }
+  ]
+}
+```
+
+#### API Responses
+
+```typescript
+// TanStack Query caching
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      cacheTime: 10 * 60 * 1000, // 10 minutes
+    },
+  },
+});
+```
+
+## Monitoring and Analytics
+
+### Firebase Analytics
+
+```typescript
+// Install Firebase Analytics
+npm install firebase
+
+// Initialize analytics
+import { initializeApp } from 'firebase/app';
+import { getAnalytics } from 'firebase/analytics';
+
+const firebaseConfig = {
+  // Your config
+};
+
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+```
+
+### Performance Monitoring
+
+```typescript
+// Track quiz completion
+const trackQuizCompletion = (score: number, totalQuestions: number) => {
+  analytics.logEvent("quiz_completed", {
+    score,
+    total_questions: totalQuestions,
+    percentage: Math.round((score / totalQuestions) * 100),
+  });
+};
+
+// Track user interactions
+const trackAnswerSubmission = (questionId: string, isCorrect: boolean) => {
+  analytics.logEvent("answer_submitted", {
+    question_id: questionId,
+    is_correct: isCorrect,
+  });
+};
+```
+
+### Error Tracking
+
+```typescript
+// Track errors
+const trackError = (error: Error, context: string) => {
+  analytics.logEvent("error_occurred", {
+    error_message: error.message,
+    error_stack: error.stack,
+    context,
+  });
+};
+```
+
+## Security Configuration
+
+### Content Security Policy
+
+```html
+<!-- public/index.html -->
+<meta
+  http-equiv="Content-Security-Policy"
+  content="default-src 'self'; 
+               script-src 'self' 'unsafe-inline'; 
+               style-src 'self' 'unsafe-inline'; 
+               img-src 'self' data: https:; 
+               connect-src 'self' https://s3.eu-west-2.amazonaws.com;"
+/>
+```
+
+### HTTPS Enforcement
+
+Firebase Hosting automatically:
+
+- Enforces HTTPS
+- Redirects HTTP to HTTPS
+- Provides SSL certificates
+- Supports HSTS headers
+
+### Security Headers
+
+```json
+// firebase.json
+{
+  "headers": [
+    {
+      "source": "**",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        }
+      ]
+    }
+  ]
+}
+```
+
+## Domain Configuration
+
+### Custom Domain Setup
+
+```bash
+# Add custom domain
+firebase hosting:sites:create your-custom-domain
+
+# Configure domain
+firebase hosting:channel:deploy live --site your-custom-domain
+```
+
+### Domain Verification
+
+1. Add domain to Firebase project
+2. Verify domain ownership
+3. Configure DNS records
+4. Enable SSL certificate
+
+## Backup and Recovery
+
+### Version History
+
+Firebase Hosting maintains:
+
+- Automatic version history
+- Rollback capabilities
+- Preview deployments
+- Release management
+
+### Rollback Process
+
+```bash
+# List previous releases
+firebase hosting:releases:list
+
+# Rollback to previous version
+firebase hosting:releases:rollback [RELEASE_ID]
+```
+
+## Troubleshooting
+
+### Common Issues
+
+#### Build Failures
+
+```bash
+# Clear cache and rebuild
+rm -rf node_modules package-lock.json
+npm install
+npm run build
+```
+
+#### Deployment Issues
+
+```bash
+# Check Firebase CLI version
+firebase --version
+
+# Update Firebase CLI
+npm install -g firebase-tools@latest
+
+# Check project configuration
+firebase projects:list
+firebase use [PROJECT_ID]
+```
+
+#### Performance Issues
+
+- Check bundle size with analyzer
+- Optimize images and assets
+- Review caching configuration
+- Monitor Core Web Vitals
+
+### Debug Commands
+
+```bash
+# Debug build
+npm run build -- --debug
+
+# Preview build locally
+npm run preview
+
+# Check Firebase configuration
+firebase hosting:channel:list
+```
+
+## Maintenance
+
+### Regular Tasks
+
+1. **Update dependencies**: Monthly security updates
+2. **Monitor performance**: Weekly performance reviews
+3. **Backup data**: Daily automated backups
+4. **Security audits**: Quarterly security reviews
+
+### Monitoring Checklist
+
+- [ ] Application loads successfully
+- [ ] All routes work correctly
+- [ ] API calls complete successfully
+- [ ] Performance metrics are acceptable
+- [ ] Security headers are present
+- [ ] SSL certificate is valid
+- [ ] CDN is serving content globally
+
+## Cost Optimization
+
+### Firebase Hosting Pricing
+
+- **Free tier**: 10GB storage, 10GB transfer/month
+- **Blaze plan**: Pay-as-you-go pricing
+- **Cost factors**: Storage, bandwidth, requests
+
+### Optimization Strategies
+
+1. **Asset optimization**: Compress images and code
+2. **Caching**: Implement proper caching headers
+3. **CDN usage**: Leverage Firebase's global CDN
+4. **Bundle optimization**: Minimize JavaScript bundle size
+5. **Image optimization**: Use WebP format when possible

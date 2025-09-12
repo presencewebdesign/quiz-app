@@ -1,0 +1,91 @@
+// Mixins are automatically imported by Vite
+
+.quizSkeleton {
+  @include card-style;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.skeletonHeader {
+  margin-bottom: $spacing-lg;
+
+  .skeletonTitle {
+    height: 24px;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    border-radius: $border-radius;
+    margin-bottom: $spacing-sm;
+  }
+
+  .skeletonProgress {
+    height: 8px;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    border-radius: $border-radius;
+  }
+}
+
+.skeletonQuestion {
+  margin-bottom: $spacing-xl;
+
+  .skeletonText {
+    height: 16px;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    border-radius: $border-radius;
+    margin-bottom: $spacing-sm;
+
+    &:first-child {
+      width: 80%;
+    }
+
+    &:nth-child(2) {
+      width: 60%;
+    }
+  }
+
+  .skeletonInput {
+    height: 40px;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    border-radius: $border-radius;
+    margin-top: $spacing-md;
+  }
+}
+
+.skeletonNavigation {
+  display: flex;
+  gap: $spacing-md;
+  justify-content: space-between;
+
+  .skeletonButton {
+    height: 40px;
+    width: 100px;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    border-radius: $border-radius;
+  }
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}

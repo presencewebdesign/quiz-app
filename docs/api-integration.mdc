@@ -1,0 +1,556 @@
+# API Integration Documentation
+
+## API Overview
+
+The quiz application integrates with a mock API that provides Error Find quiz data. The API returns structured data containing two different quiz flows with varying question formats.
+
+## API Endpoint
+
+```
+GET https://s3.eu-west-2.amazonaws.com/interview.mock.data/payload.json
+```
+
+## Data Structure
+
+### Root Response
+
+```typescript
+interface QuizData {
+  name: string; // "Error Find"
+  heading: string; // Game description
+  activities: Activity[]; // Array of quiz activities
+}
+```
+
+### Activity Structure
+
+```typescript
+interface Activity {
+  activity_name: string; // "Activity One" or "Activity Two"
+  order: number; // Activity sequence (1, 2)
+  questions: Question[]; // Questions array (Flow 1) or Rounds array (Flow 2)
+}
+```
+
+### Question Structure (Flow 1)
+
+```typescript
+interface Flow1Question {
+  is_correct: boolean; // Whether the text is correct
+  stimulus: string; // Text with errors marked by asterisks
+  order: number; // Question sequence
+  user_answers: string[]; // User's answers (initially empty)
+  feedback: string; // Corrected text with proper formatting
+}
+```
+
+### Round Structure (Flow 2)
+
+```typescript
+interface Round {
+  round_title: string; // "Round 1", "Round 2", etc.
+  order: number; // Round sequence
+  questions: Question[]; // Questions within the round
+}
+```
+
+## TanStack Query Integration
+
+### Query Client Setup
+
+```typescript
+// services/queryClient.ts
+import { QueryClient } from "@tanstack/react-query";
+
+export const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      cacheTime: 10 * 60 * 1000, // 10 minutes
+      retry: 3, // Retry failed requests
+      refetchOnWindowFocus: false, // Don't refetch on window focus
+      suspense: true, // Enable Suspense mode
+    },
+  },
+});
+```
+
+### API Service Layer
+
+```typescript
+// services/quizApiService.ts
+import { useQuery } from "@tanstack/react-query";
+
+const QUIZ_QUERY_KEY = "quiz-data";
+
+// Main quiz data query
+export const useQuizData = () => {
+  return useQuery({
+    queryKey: [QUIZ_QUERY_KEY],
+    queryFn: async (): Promise<QuizData> => {
+      const response = await fetch(
+        "https://s3.eu-west-2.amazonaws.com/interview.mock.data/payload.json"
+      );
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch quiz data: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return normalizeQuizData(data);
+    },
+    suspense: true,
+  });
+};
+
+// Flow-specific queries
+export const useFlow1Data = () => {
+  return useQuery({
+    queryKey: [QUIZ_QUERY_KEY, "flow1"],
+    queryFn: async (): Promise<Flow1Activity> => {
+      const data = await fetchQuizData();
+      return data.activities[0] as Flow1Activity;
+    },
+    suspense: true,
+  });
+};
+
+export const useFlow2Data = () => {
+  return useQuery({
+    queryKey: [QUIZ_QUERY_KEY, "flow2"],
+    queryFn: async (): Promise<Flow2Activity> => {
+      const data = await fetchQuizData();
+      return data.activities[1] as Flow2Activity;
+    },
+    suspense: true,
+  });
+};
+```
+
+### Data Normalization
+
+```typescript
+// utils/dataNormalization.ts
+export const normalizeQuizData = (rawData: any): QuizData => {
+  return {
+    name: rawData.name || "Error Find Quiz",
+    heading: rawData.heading || "Find mistakes in written text",
+    activities: rawData.activities?.map(normalizeActivity) || [],
+  };
+};
+
+const normalizeActivity = (activity: any): Activity => {
+  return {
+    activity_name: activity.activity_name || "Unknown Activity",
+    order: activity.order || 0,
+    questions: activity.questions?.map(normalizeQuestion) || [],
+  };
+};
+
+const normalizeQuestion = (question: any): Question => {
+  return {
+    is_correct: Boolean(question.is_correct),
+    stimulus: question.stimulus || "",
+    order: question.order || 0,
+    user_answers: question.user_answers || [],
+    feedback: question.feedback || "",
+  };
+};
+```
+
+## Error Handling
+
+### API Error Types
+
+```typescript
+// types/apiErrors.ts
+export interface ApiError {
+  message: string;
+  status?: number;
+  code?: string;
+}
+
+export class NetworkError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "NetworkError";
+  }
+}
+
+export class ValidationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ValidationError";
+  }
+}
+```
+
+### Error Boundary Integration
+
+```typescript
+// components/common/ApiErrorBoundary.tsx
+import { ErrorBoundary } from "react-error-boundary";
+
+interface ApiErrorFallbackProps {
+  error: Error;
+  resetErrorBoundary: () => void;
+}
+
+const ApiErrorFallback = ({
+  error,
+  resetErrorBoundary,
+}: ApiErrorFallbackProps) => (
+  <div className="api-error-fallback">
+    <h2>Failed to Load Quiz Data</h2>
+    <p>There was an error loading the quiz questions.</p>
+    <details>
+      <summary>Error Details</summary>
+      <pre>{error.message}</pre>
+    </details>
+    <button onClick={resetErrorBoundary}>Try Again</button>
+  </div>
+);
+
+export const ApiErrorBoundary = ({
+  children,
+}: {
+  children: React.ReactNode;
+}) => (
+  <ErrorBoundary
+    FallbackComponent={ApiErrorFallback}
+    onError={(error) => {
+      console.error("API Error:", error);
+      // Could send to error reporting service
+    }}
+  >
+    {children}
+  </ErrorBoundary>
+);
+```
+
+## Loading States
+
+### Suspense Integration
+
+```typescript
+// App.tsx
+import { Suspense } from "react";
+
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ApiErrorBoundary>
+        <Suspense fallback={<LoadingScreen />}>
+          <Router>
+            <Routes>
+              <Route path="/quiz/:flow" element={<QuizPage />} />
+            </Routes>
+          </Router>
+        </Suspense>
+      </ApiErrorBoundary>
+    </QueryClientProvider>
+  );
+}
+```
+
+### Loading Components
+
+```typescript
+// components/common/LoadingScreen.tsx
+export const LoadingScreen = () => (
+  <div className="loading-screen">
+    <div className="spinner" />
+    <p>Loading quiz data...</p>
+  </div>
+);
+
+// components/common/QuizLoadingSkeleton.tsx
+export const QuizLoadingSkeleton = () => (
+  <div className="quiz-skeleton">
+    <div className="skeleton-header">
+      <div className="skeleton-title" />
+      <div className="skeleton-progress" />
+    </div>
+    <div className="skeleton-question">
+      <div className="skeleton-text" />
+      <div className="skeleton-text" />
+      <div className="skeleton-input" />
+    </div>
+  </div>
+);
+```
+
+## Caching Strategy
+
+### Query Cache Configuration
+
+```typescript
+// services/cacheConfig.ts
+export const CACHE_KEYS = {
+  QUIZ_DATA: "quiz-data",
+  FLOW_1: "quiz-data-flow1",
+  FLOW_2: "quiz-data-flow2",
+  USER_ANSWERS: "user-answers",
+} as const;
+
+export const CACHE_TIMES = {
+  QUIZ_DATA: 5 * 60 * 1000, // 5 minutes
+  USER_ANSWERS: 30 * 60 * 1000, // 30 minutes
+} as const;
+```
+
+### Background Refetching
+
+```typescript
+// hooks/useQuizDataWithRefresh.ts
+export const useQuizDataWithRefresh = () => {
+  const query = useQuizData();
+
+  const refreshData = useCallback(() => {
+    queryClient.invalidateQueries([CACHE_KEYS.QUIZ_DATA]);
+  }, []);
+
+  const prefetchNextFlow = useCallback((currentFlow: "flow1" | "flow2") => {
+    const nextFlow = currentFlow === "flow1" ? "flow2" : "flow1";
+    queryClient.prefetchQuery({
+      queryKey: [CACHE_KEYS.QUIZ_DATA, nextFlow],
+      queryFn: () => fetchFlowData(nextFlow),
+    });
+  }, []);
+
+  return {
+    ...query,
+    refreshData,
+    prefetchNextFlow,
+  };
+};
+```
+
+## Optimistic Updates
+
+### Answer Submission
+
+```typescript
+// hooks/useQuizAnswers.ts
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+
+export const useQuizAnswers = () => {
+  const queryClient = useQueryClient();
+
+  const submitAnswerMutation = useMutation({
+    mutationFn: async ({
+      questionId,
+      answer,
+    }: {
+      questionId: string;
+      answer: string;
+    }) => {
+      // Simulate API call (in real app, this would be actual API)
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      return { questionId, answer, timestamp: Date.now() };
+    },
+    onMutate: async ({ questionId, answer }) => {
+      // Optimistic update
+      queryClient.setQueryData([CACHE_KEYS.USER_ANSWERS], (old: any) => ({
+        ...old,
+        [questionId]: answer,
+      }));
+    },
+    onError: (error, variables, context) => {
+      // Rollback optimistic update on error
+      queryClient.invalidateQueries([CACHE_KEYS.USER_ANSWERS]);
+    },
+  });
+
+  return {
+    submitAnswer: submitAnswerMutation.mutate,
+    isSubmitting: submitAnswerMutation.isPending,
+  };
+};
+```
+
+## Text Processing
+
+### Error Text Parsing
+
+```typescript
+// utils/textParser.ts
+export const parseStimulus = (stimulus: string): string => {
+  // Convert "*text*" to highlighted error text
+  return stimulus.replace(
+    /\*(.*?)\*/g,
+    '<span class="error-highlight">$1</span>'
+  );
+};
+
+export const extractError = (stimulus: string): string => {
+  const match = stimulus.match(/\*(.*?)\*/);
+  return match ? match[1] : "";
+};
+
+export const extractCorrectAnswer = (feedback: string): string => {
+  const match = feedback.match(/\*(.*?)\*/);
+  return match ? match[1] : "";
+};
+
+export const compareAnswers = (
+  userAnswer: string,
+  correctAnswer: string
+): boolean => {
+  return userAnswer.toLowerCase().trim() === correctAnswer.toLowerCase().trim();
+};
+```
+
+## API Testing
+
+### Mock Data for Testing
+
+```typescript
+// __mocks__/quizApiService.ts
+export const mockQuizData: QuizData = {
+  name: "Error Find",
+  heading: "This game teaches you to find mistakes in written text.",
+  activities: [
+    {
+      activity_name: "Activity One",
+      order: 1,
+      questions: [
+        {
+          is_correct: false,
+          stimulus: "I really enjoy *to play football* with friends.",
+          order: 1,
+          user_answers: [],
+          feedback: "I really enjoy *playing football* with friends.",
+        },
+      ],
+    },
+  ],
+};
+
+export const mockUseQuizData = () => ({
+  data: mockQuizData,
+  isLoading: false,
+  error: null,
+  refetch: jest.fn(),
+});
+```
+
+### API Error Simulation
+
+```typescript
+// utils/apiErrorSimulator.ts
+export const simulateApiError = (
+  errorType: "network" | "timeout" | "server"
+) => {
+  switch (errorType) {
+    case "network":
+      throw new NetworkError("Network connection failed");
+    case "timeout":
+      throw new Error("Request timeout");
+    case "server":
+      throw new Error("Server error: 500");
+    default:
+      throw new Error("Unknown error");
+  }
+};
+```
+
+## Performance Monitoring
+
+### Query Performance
+
+```typescript
+// utils/performanceMonitor.ts
+export const logQueryPerformance = (queryKey: string[], duration: number) => {
+  if (duration > 1000) {
+    console.warn(
+      `Slow query detected: ${queryKey.join(".")} took ${duration}ms`
+    );
+  }
+};
+
+// Usage in query
+export const useQuizDataWithMonitoring = () => {
+  const startTime = performance.now();
+
+  return useQuery({
+    queryKey: [CACHE_KEYS.QUIZ_DATA],
+    queryFn: async () => {
+      const data = await fetchQuizData();
+      const duration = performance.now() - startTime;
+      logQueryPerformance([CACHE_KEYS.QUIZ_DATA], duration);
+      return data;
+    },
+  });
+};
+```
+
+## Current Implementation Details
+
+### Flow 1 Implementation
+
+**Data Usage**: Uses all 5 questions from `activities[0].questions`
+
+**Answer Storage**: Uses simple question order as key (`"1"`, `"2"`, etc.)
+
+**Navigation**: Linear progression through all questions regardless of correctness
+
+**Score Calculation**:
+
+```typescript
+const calculateScore = () => {
+  let correctCount = 0;
+  questions.forEach((q: any) => {
+    const userAnswer = userAnswers.get(q.order.toString());
+    const correctAnswer = q.feedback.replace(/\*([^*]+)\*/g, "$1");
+    if (userAnswer === correctAnswer) {
+      correctCount++;
+    }
+  });
+  return {
+    correct: correctCount,
+    total: questions.length,
+    percentage: Math.round((correctCount / questions.length) * 100),
+  };
+};
+```
+
+### Flow 2 Implementation
+
+**Data Usage**: Uses first question from each round (`activities[1].questions[round].questions[0]`)
+
+**Answer Storage**: Uses unique keys combining round and question order (`"0-1"`, `"1-1"`, etc.)
+
+**Navigation**: Conditional progression - must answer correctly to proceed to next round
+
+**Score Calculation**: Converts unique keys back to question order for score calculation
+
+```typescript
+const scoreAnswers = new Map<string, string>();
+userAnswers.forEach((answer, key) => {
+  const questionOrder = key.split("-")[1]; // Extract question order
+  scoreAnswers.set(questionOrder, answer);
+});
+const score = calculateScore(scoreAnswers, allQuestions);
+```
+
+### Answer Generation
+
+Both flows use intelligent answer generation:
+
+**Flow 1**: Basic alternatives with common patterns
+**Flow 2**: Context-aware alternatives based on specific error patterns:
+
+- "haven't finished" → "didn't finish", "hasn't finished", "won't finish"
+- "like listening" → "likes to listen", "like to listen", "likes listening"
+- "more cheaper" → "more cheap", "cheaper", "most cheap"
+- "In the other hand" → "On the other hand", "In other hand", "On other hand"
+
+### Score Display
+
+Both flows navigate to the shared `ScorePage` component which displays:
+
+- Correct answers count (e.g., "3 / 5")
+- Percentage score
+- Encouraging message based on performance
+- Navigation back to home

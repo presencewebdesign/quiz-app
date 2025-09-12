@@ -1,0 +1,38 @@
+// Mixins are automatically imported by Vite
+
+.roundTransition {
+  @include card-style;
+  text-align: center;
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.transitionContent {
+  h3 {
+    color: $success-color;
+    font-size: 1.8rem;
+    margin-bottom: $spacing-md;
+  }
+
+  p {
+    color: $secondary-color;
+    font-size: 1.1rem;
+    margin-bottom: $spacing-xl;
+    line-height: 1.6;
+  }
+}
+
+.transitionActions {
+  display: flex;
+  justify-content: center;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

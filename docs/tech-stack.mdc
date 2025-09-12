@@ -1,0 +1,672 @@
+# Tech Stack Documentation
+
+## Core Technologies
+
+### Frontend Framework
+
+- **React 18+**: Modern React with concurrent features
+- **TypeScript**: Type-safe development with enhanced IDE support
+- **React Router v6**: Client-side routing with modern patterns
+
+### State Management & Data Fetching
+
+- **TanStack Query v5**: Server state management with caching
+- **React Context API**: Client state management
+- **React Suspense**: Declarative loading states
+
+### UI & Styling
+
+- **SCSS**: Enhanced CSS with variables, mixins, and nesting
+- **CSS Modules**: Scoped styling with TypeScript support
+- **CSS Custom Properties**: Design system variables
+- **Responsive Design**: Mobile-first approach
+
+### Development Tools
+
+- **Vite**: Fast build tool and development server
+- **ESLint**: Code linting with TypeScript rules
+- **Prettier**: Code formatting
+- **TypeScript**: Static type checking
+
+## Package Dependencies
+
+### Core Dependencies
+
+```json
+{
+  "react": "^18.2.0",
+  "react-dom": "^18.2.0",
+  "react-router-dom": "^6.8.0",
+  "@tanstack/react-query": "^5.0.0",
+  "react-error-boundary": "^4.0.0"
+}
+```
+
+### Development Dependencies
+
+```json
+{
+  "@types/react": "^18.0.0",
+  "@types/react-dom": "^18.0.0",
+  "@typescript-eslint/eslint-plugin": "^6.0.0",
+  "@typescript-eslint/parser": "^6.0.0",
+  "eslint": "^8.0.0",
+  "prettier": "^3.0.0",
+  "vite": "^4.0.0",
+  "@vitejs/plugin-react": "^4.0.0",
+  "sass": "^1.69.0"
+}
+```
+
+### Optional Dependencies
+
+```json
+{
+  "@tanstack/react-query-devtools": "^5.0.0",
+  "react-testing-library": "^14.0.0",
+  "jest": "^29.0.0",
+  "@testing-library/jest-dom": "^6.0.0"
+}
+```
+
+## Technology Choices Rationale
+
+### React 18+
+
+**Why**: Latest React version with concurrent features, automatic batching, and improved performance.
+
+**Benefits**:
+
+- Concurrent rendering for better UX
+- Automatic batching of state updates
+- Improved Suspense and error boundary support
+- Better performance with React.memo and useMemo
+
+### TypeScript
+
+**Why**: Type safety, better developer experience, and reduced runtime errors.
+
+**Benefits**:
+
+- Compile-time error detection
+- Enhanced IDE support with autocomplete
+- Better refactoring capabilities
+- Self-documenting code with types
+
+### TanStack Query
+
+**Why**: Modern data fetching library that provides powerful server state management with excellent developer experience.
+
+**Key Benefits**:
+
+- **Automatic Caching**: Intelligent caching with configurable stale times
+- **Background Refetching**: Keeps data fresh without user intervention
+- **Optimistic Updates**: Immediate UI feedback with rollback on errors
+- **Built-in Loading States**: Automatic loading and error state management
+- **DevTools Integration**: Powerful debugging and inspection tools
+- **TypeScript Support**: Full type safety with excellent IntelliSense
+- **Suspense Integration**: Declarative loading states with React Suspense
+
+**Performance & Developer Experience**:
+
+- **Reduced Boilerplate**: Eliminates repetitive data fetching code
+- **Smart Refetching**: Only refetches when necessary
+- **Memory Management**: Automatic garbage collection of unused queries
+- **Parallel Queries**: Efficient handling of multiple simultaneous requests
+- **Query Invalidation**: Precise cache invalidation strategies
+
+**TanStack Query Architecture**:
+
+```typescript
+// Query Client Configuration
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      cacheTime: 10 * 60 * 1000, // 10 minutes
+      retry: 3,
+      refetchOnWindowFocus: false,
+      suspense: true,
+    },
+  },
+});
+
+// Custom Hooks for Data Fetching
+export const useQuizData = () => {
+  return useQuery({
+    queryKey: ["quiz-data"],
+    queryFn: async (): Promise<QuizData> => {
+      const response = await fetch(API_URL);
+      if (!response.ok) throw new Error("Failed to fetch");
+      return response.json();
+    },
+    suspense: true,
+  });
+};
+
+// Optimistic Updates
+export const useSubmitAnswer = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: submitAnswer,
+    onMutate: async (newAnswer) => {
+      // Optimistic update
+      queryClient.setQueryData(["answers"], (old) => ({
+        ...old,
+        [newAnswer.questionId]: newAnswer.answer,
+      }));
+    },
+    onError: (error, variables, context) => {
+      // Rollback on error
+      queryClient.invalidateQueries(["answers"]);
+    },
+  });
+};
+```
+
+**Why Not SWR or Apollo Client**:
+
+- **SWR**: Less feature-rich, limited TypeScript support
+- **Apollo Client**: Overkill for REST APIs, GraphQL-specific
+- **TanStack Query**: Perfect balance of features and simplicity
+- **Better DX**: Superior developer experience and documentation
+
+**Advanced Features**:
+
+- **Query Invalidation**: Precise cache management
+- **Parallel Queries**: Efficient concurrent data fetching
+- **Dependent Queries**: Chain queries based on previous results
+- **Infinite Queries**: Handle pagination seamlessly
+- **Offline Support**: Built-in offline-first capabilities
+
+### Vite
+
+**Why**: Modern build tool that provides exceptional developer experience and performance.
+
+**Key Benefits**:
+
+- **Lightning-fast HMR**: Sub-second hot module replacement for instant feedback
+- **Native ES Modules**: Uses native ES modules in development for faster startup
+- **Optimized Production Builds**: Rollup-based bundling with tree-shaking and code splitting
+- **Built-in TypeScript Support**: Zero-config TypeScript compilation
+- **Modern Ecosystem**: Designed for modern JavaScript frameworks and libraries
+- **Plugin Architecture**: Extensible with a rich plugin ecosystem
+- **Better DX**: Superior developer experience compared to traditional bundlers
+
+**Performance Comparison**:
+
+- **Cold Start**: ~50ms vs Webpack's ~1-3s
+- **HMR Updates**: ~10-50ms vs Webpack's ~100-500ms
+- **Bundle Analysis**: Built-in bundle analyzer and optimization
+
+**Why Not Webpack/Create React App**:
+
+- CRA is deprecated and slower
+- Webpack has complex configuration and slower builds
+- Vite's modern approach aligns with current web standards
+- Better out-of-the-box performance optimizations
+
+**Vite Configuration Highlights**:
+
+```typescript
+// vite.config.ts
+export default defineConfig({
+  plugins: [react()],
+  base: "/", // Firebase hosting root
+  build: {
+    outDir: "build",
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ["react", "react-dom"],
+          router: ["react-router-dom"],
+          query: ["@tanstack/react-query"],
+        },
+      },
+    },
+  },
+  resolve: {
+    alias: {
+      "@": resolve(__dirname, "./src"),
+    },
+  },
+});
+```
+
+**Development Experience Improvements**:
+
+- **Instant Server Start**: No bundling in development
+- **Fast HMR**: Only updates changed modules
+- **Built-in TypeScript**: No additional configuration needed
+- **Environment Variables**: Automatic `.env` file support
+- **Asset Handling**: Automatic asset optimization and processing
+
+### SCSS
+
+**Why**: Enhanced CSS with powerful features for maintainable and scalable styling.
+
+**Key Benefits**:
+
+- **Variables**: Centralized color, spacing, and typography management
+- **Nesting**: Intuitive CSS structure that mirrors HTML hierarchy
+- **Mixins**: Reusable style patterns and responsive breakpoints
+- **Functions**: Dynamic calculations and color manipulations
+- **Partials**: Modular stylesheet organization
+- **Import System**: Better dependency management than CSS imports
+
+**Performance & Developer Experience**:
+
+- **Compile-time Processing**: No runtime overhead
+- **Better IntelliSense**: Enhanced IDE support with SCSS syntax
+- **Modular Architecture**: Component-scoped styles with global utilities
+- **Design System**: Consistent theming and spacing
+
+**SCSS Architecture**:
+
+```scss
+// styles/_variables.scss
+$primary-color: #007bff;
+$secondary-color: #6c757d;
+$success-color: #28a745;
+$danger-color: #dc3545;
+
+$font-family-base: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+  sans-serif;
+$font-size-base: 16px;
+$line-height-base: 1.5;
+
+$spacing-xs: 0.25rem;
+$spacing-sm: 0.5rem;
+$spacing-md: 1rem;
+$spacing-lg: 1.5rem;
+$spacing-xl: 2rem;
+
+$border-radius: 4px;
+$box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+// Breakpoints
+$breakpoint-sm: 576px;
+$breakpoint-md: 768px;
+$breakpoint-lg: 992px;
+$breakpoint-xl: 1200px;
+```
+
+**Mixins for Responsive Design**:
+
+```scss
+// styles/_mixins.scss
+@mixin respond-to($breakpoint) {
+  @if $breakpoint == sm {
+    @media (min-width: $breakpoint-sm) {
+      @content;
+    }
+  }
+  @if $breakpoint == md {
+    @media (min-width: $breakpoint-md) {
+      @content;
+    }
+  }
+  @if $breakpoint == lg {
+    @media (min-width: $breakpoint-lg) {
+      @content;
+    }
+  }
+  @if $breakpoint == xl {
+    @media (min-width: $breakpoint-xl) {
+      @content;
+    }
+  }
+}
+
+@mixin button-variant($bg-color, $text-color: white) {
+  background-color: $bg-color;
+  color: $text-color;
+  border: 1px solid $bg-color;
+
+  &:hover {
+    background-color: darken($bg-color, 10%);
+    border-color: darken($bg-color, 10%);
+  }
+
+  &:disabled {
+    background-color: lighten($bg-color, 20%);
+    border-color: lighten($bg-color, 20%);
+    opacity: 0.6;
+  }
+}
+```
+
+**Component Styling Pattern**:
+
+```scss
+// components/quiz/ErrorFindQuestion.module.scss
+@import "../../styles/variables";
+@import "../../styles/mixins";
+
+.errorFindQuestion {
+  padding: $spacing-xl;
+  border: 1px solid lighten($secondary-color, 30%);
+  border-radius: $border-radius;
+  background: white;
+  box-shadow: $box-shadow;
+
+  .questionHeader {
+    margin-bottom: $spacing-lg;
+
+    h3 {
+      color: $primary-color;
+      font-size: 1.5rem;
+      margin-bottom: $spacing-sm;
+    }
+  }
+
+  .stimulusText {
+    font-size: 1.2rem;
+    line-height: $line-height-base;
+    margin-bottom: $spacing-xl;
+    padding: $spacing-md;
+    background: lighten($secondary-color, 45%);
+    border-radius: $border-radius;
+
+    .errorHighlight {
+      background-color: lighten($danger-color, 40%);
+      padding: 2px 4px;
+      border-radius: 2px;
+      font-weight: bold;
+    }
+  }
+
+  .inputSection {
+    display: flex;
+    gap: $spacing-md;
+    align-items: center;
+
+    @include respond-to(md) {
+      flex-direction: column;
+      align-items: stretch;
+    }
+  }
+
+  .textInput {
+    flex: 1;
+    padding: $spacing-sm $spacing-md;
+    border: 1px solid lighten($secondary-color, 20%);
+    border-radius: $border-radius;
+    font-size: $font-size-base;
+    transition: border-color 0.2s ease;
+
+    &:focus {
+      outline: none;
+      border-color: $primary-color;
+      box-shadow: 0 0 0 2px rgba($primary-color, 0.25);
+    }
+  }
+}
+```
+
+**Why Not CSS-in-JS**:
+
+- **Performance**: No runtime CSS generation overhead
+- **Bundle Size**: Smaller JavaScript bundles
+- **Caching**: Better browser caching of stylesheets
+- **Developer Tools**: Better CSS debugging in browser dev tools
+- **Team Familiarity**: Easier for designers and developers to collaborate
+
+**Vite SCSS Integration**:
+
+```typescript
+// vite.config.ts
+export default defineConfig({
+  css: {
+    preprocessorOptions: {
+      scss: {
+        additionalData: `@import "./src/styles/variables.scss";`,
+      },
+    },
+  },
+});
+```
+
+## Architecture Patterns
+
+### Component Patterns
+
+#### Container-Presenter Pattern
+
+```typescript
+// Container Component (manages state and logic)
+const QuizContainer = () => {
+  const { data, isLoading, error } = useQuizData();
+
+  if (isLoading) return <LoadingSpinner />;
+  if (error) return <ErrorDisplay error={error} />;
+
+  return <QuizPresenter data={data} />;
+};
+
+// Presenter Component (pure UI)
+const QuizPresenter = ({ data }: { data: QuizData }) => {
+  return <div>{/* Pure UI rendering */}</div>;
+};
+```
+
+#### Custom Hooks Pattern
+
+```typescript
+// Encapsulate business logic in custom hooks
+const useQuizState = (flow: "flow1" | "flow2") => {
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [answers, setAnswers] = useState<Map<string, string>>(new Map());
+
+  const nextQuestion = useCallback(() => {
+    setCurrentQuestion((prev) => prev + 1);
+  }, []);
+
+  return { currentQuestion, answers, nextQuestion };
+};
+```
+
+### Data Flow Patterns
+
+#### Unidirectional Data Flow
+
+```typescript
+// Data flows down through props
+const ParentComponent = () => {
+  const [state, setState] = useState(initialState);
+
+  return <ChildComponent data={state} onUpdate={setState} />;
+};
+
+// Events flow up through callbacks
+const ChildComponent = ({ data, onUpdate }: Props) => {
+  const handleClick = () => {
+    onUpdate(newData);
+  };
+
+  return <button onClick={handleClick}>Update</button>;
+};
+```
+
+#### Context Pattern for Global State
+
+```typescript
+// Create context
+const QuizContext = createContext<QuizContextType | null>(null);
+
+// Provider component
+const QuizProvider = ({ children }: { children: React.ReactNode }) => {
+  const [state, dispatch] = useReducer(quizReducer, initialState);
+
+  return (
+    <QuizContext.Provider value={{ state, dispatch }}>
+      {children}
+    </QuizContext.Provider>
+  );
+};
+
+// Custom hook to use context
+const useQuiz = () => {
+  const context = useContext(QuizContext);
+  if (!context) {
+    throw new Error("useQuiz must be used within QuizProvider");
+  }
+  return context;
+};
+```
+
+## Performance Optimizations
+
+### Code Splitting
+
+```typescript
+// Route-based code splitting
+const QuizPage = lazy(() => import("./pages/QuizPage"));
+const ScorePage = lazy(() => import("./pages/ScorePage"));
+
+// Component-based code splitting
+const HeavyComponent = lazy(() => import("./components/HeavyComponent"));
+```
+
+### Memoization
+
+```typescript
+// Memoize expensive calculations
+const ExpensiveComponent = ({ data }: Props) => {
+  const processedData = useMemo(() => {
+    return expensiveCalculation(data);
+  }, [data]);
+
+  return <div>{processedData}</div>;
+};
+
+// Memoize components to prevent unnecessary re-renders
+const MemoizedComponent = memo(({ data }: Props) => {
+  return <div>{data}</div>;
+});
+```
+
+### Bundle Optimization
+
+```typescript
+// Dynamic imports for large libraries
+const loadChartLibrary = () => import("chart.js");
+
+// Tree shaking friendly imports
+import { specificFunction } from "large-library";
+// Instead of: import * as library from 'large-library';
+```
+
+## Development Workflow
+
+### Local Development
+
+```bash
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+
+# Run linting
+npm run lint
+
+# Run type checking
+npm run type-check
+
+# Run tests
+npm run test
+```
+
+### Build Process
+
+```bash
+# Build for production
+npm run build
+
+# Preview production build
+npm run preview
+
+# Analyze bundle
+npm run analyze
+```
+
+### Code Quality
+
+- **ESLint**: Enforces coding standards
+- **Prettier**: Consistent code formatting
+- **TypeScript**: Static type checking
+- **Husky**: Pre-commit hooks for quality gates
+
+## Deployment Strategy
+
+### Firebase Hosting
+
+```bash
+# Install Firebase CLI
+npm install -g firebase-tools
+
+# Initialize Firebase
+firebase init hosting
+
+# Deploy
+npm run build
+firebase deploy
+```
+
+### Environment Configuration
+
+```typescript
+// Environment variables
+const config = {
+  apiUrl: import.meta.env.VITE_API_URL,
+  environment: import.meta.env.MODE,
+  isDevelopment: import.meta.env.DEV,
+  isProduction: import.meta.env.PROD,
+};
+```
+
+## Browser Support
+
+### Target Browsers
+
+- **Chrome**: Latest 2 versions
+- **Firefox**: Latest 2 versions
+- **Safari**: Latest 2 versions
+- **Edge**: Latest 2 versions
+
+### Polyfills
+
+- **Core-js**: JavaScript polyfills
+- **Intersection Observer**: For lazy loading
+- **Resize Observer**: For responsive components
+
+## Security Considerations
+
+### Content Security Policy
+
+```html
+<meta
+  http-equiv="Content-Security-Policy"
+  content="default-src 'self'; 
+               script-src 'self' 'unsafe-inline'; 
+               style-src 'self' 'unsafe-inline';"
+/>
+```
+
+### Input Sanitization
+
+```typescript
+// Sanitize user inputs
+const sanitizeInput = (input: string): string => {
+  return DOMPurify.sanitize(input);
+};
+```
+
+### HTTPS Enforcement
+
+- **Firebase Hosting**: Automatic HTTPS
+- **HSTS Headers**: HTTP Strict Transport Security
+- **Secure Cookies**: HttpOnly and Secure flags

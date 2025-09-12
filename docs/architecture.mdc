@@ -1,0 +1,197 @@
+# Quiz Application Architecture
+
+## Overview
+
+This document outlines the architecture of the Error Find Quiz application. The application demonstrates modern React patterns, TypeScript best practices, and scalable architecture principles.
+
+## High-Level Architecture
+
+```mermaid
+graph TB
+    A[User Interface Layer] --> B[Business Logic Layer]
+    B --> C[Data Layer]
+    C --> D[External API]
+
+    A --> E[React Components]
+    A --> F[Suspense Boundaries]
+    A --> G[Error Boundaries]
+
+    B --> H[Custom Hooks]
+    B --> I[Context Providers]
+    B --> J[State Management]
+
+    C --> K[TanStack Query]
+    C --> L[API Services]
+    C --> M[Data Normalization]
+```
+
+## Architecture Principles
+
+### 1. Separation of Concerns
+
+- **Presentation Layer**: UI components and user interactions
+- **Business Logic Layer**: Quiz logic, state management, and data processing
+- **Data Layer**: API communication, caching, and data transformation
+
+### 2. Component Composition
+
+- **Container Components**: Manage state and business logic
+- **Presentational Components**: Focus solely on rendering UI
+- **Custom Hooks**: Encapsulate reusable logic
+
+### 3. Data Flow
+
+- **Unidirectional**: Data flows down through props, events flow up through callbacks
+- **Centralized State**: Quiz state managed through React Context
+- **Optimistic Updates**: Immediate UI feedback with background synchronization
+
+## Project Structure
+
+```
+src/
+├── components/           # Reusable UI components
+│   ├── common/          # Shared components (Button, Loading, etc.)
+│   ├── quiz/            # Quiz-specific components
+│   └── layout/          # Layout components
+├── hooks/               # Custom React hooks
+├── services/            # API and external services
+├── types/               # TypeScript type definitions
+├── utils/               # Utility functions
+├── contexts/            # React contexts for state management
+├── pages/               # Main application screens
+└── styles/              # CSS/styling files
+```
+
+## Key Architectural Decisions
+
+### State Management
+
+- **React Context + useReducer**: Sufficient for this application size
+- **TanStack Query**: Handles server state and caching
+- **Local State**: Component-specific state with useState/useReducer
+
+### Data Fetching
+
+- **Suspense Mode**: Declarative loading states
+- **Error Boundaries**: Graceful error handling
+- **Optimistic Updates**: Better user experience
+
+### Component Design
+
+- **Composition over Inheritance**: Flexible component composition
+- **Props Interface**: Clear component contracts
+- **Memoization**: Performance optimization where needed
+
+## Flow Architecture
+
+### Flow 1: Sequential Questions
+
+```typescript
+interface Flow1Architecture {
+  dataSource: "activities[0].questions"; // 5 questions total
+  navigation: "linear-progression";
+  transitions: "question-to-question (unconditional)";
+  scoring: "end-of-flow-with-progress-tracking";
+  features: [
+    "Progress bar (Question X of 5)",
+    "Immediate feedback per question",
+    "Score screen with percentage",
+    "Sequential navigation regardless of correctness",
+  ];
+}
+```
+
+### Flow 2: Rounds-based Questions
+
+```typescript
+interface Flow2Architecture {
+  dataSource: "activities[1].questions[round].questions[0]"; // First question per round
+  navigation: "conditional-round-progression";
+  transitions: "question-to-question, round-to-round (conditional)";
+  scoring: "end-of-all-rounds-via-score-page";
+  features: [
+    "Round progress (Round X of Y)",
+    "Conditional progression (must pass to proceed)",
+    "Unique answer keys (round-questionOrder)",
+    "Intelligent answer generation",
+    "Score page navigation",
+  ];
+}
+```
+
+## Error Handling Strategy
+
+### API Errors
+
+- **Retry Logic**: Automatic retry with exponential backoff
+- **Fallback UI**: Graceful degradation when API fails
+- **User Feedback**: Clear error messages and recovery options
+
+### Runtime Errors
+
+- **Error Boundaries**: Catch and handle component errors
+- **Logging**: Error reporting for debugging
+- **Recovery**: Reset mechanisms for error states
+
+## Performance Considerations
+
+### Code Splitting
+
+- **Route-based**: Lazy load pages
+- **Component-based**: Lazy load heavy components
+- **Bundle Analysis**: Monitor bundle size
+
+### Caching Strategy
+
+- **Query Cache**: TanStack Query automatic caching
+- **Component Memoization**: Prevent unnecessary re-renders
+- **Data Normalization**: Efficient data structures
+
+## Testing Strategy
+
+### Unit Tests
+
+- **Components**: Test individual component behavior
+- **Hooks**: Test custom hook logic
+- **Utils**: Test utility functions
+
+### Integration Tests
+
+- **User Flows**: Test complete user journeys
+- **API Integration**: Test data fetching and error handling
+- **State Management**: Test context and state updates
+
+### E2E Tests
+
+- **Critical Paths**: Test main user flows
+- **Cross-browser**: Ensure compatibility
+- **Performance**: Monitor loading times and responsiveness
+
+## Scalability Considerations
+
+### Future Enhancements
+
+- **New Question Types**: Extensible question component system
+- **Additional Flows**: Flexible flow management system
+- **Analytics**: Built-in analytics hooks
+- **Accessibility**: WCAG compliance framework
+
+### Performance Monitoring
+
+- **Bundle Size**: Regular bundle analysis
+- **Runtime Performance**: React DevTools profiling
+- **User Experience**: Core Web Vitals monitoring
+
+## Security Considerations
+
+### Data Protection
+
+- **Input Validation**: Sanitize user inputs
+- **XSS Prevention**: Safe HTML rendering
+- **CSRF Protection**: Secure API communication
+
+### Privacy
+
+- **Data Minimization**: Only collect necessary data
+- **Local Storage**: Secure local data storage
+- **Session Management**: Proper session handling

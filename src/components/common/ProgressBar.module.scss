@@ -1,0 +1,28 @@
+// Variables are automatically imported by Vite
+
+.progressBar {
+  position: relative;
+  width: 100%;
+  height: 8px;
+  background-color: lighten($secondary-color, 40%);
+  border-radius: $border-radius;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background-color: $primary-color;
+  border-radius: $border-radius;
+  transition: width 0.3s ease;
+}
+
+.progressText {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}

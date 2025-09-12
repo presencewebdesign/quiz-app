@@ -1,0 +1,58 @@
+// Mixins are automatically imported by Vite
+
+.homePage {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.welcomeSection {
+  text-align: center;
+  margin-bottom: $spacing-xl;
+
+  h2 {
+    color: $primary-color;
+    font-size: 2rem;
+    margin-bottom: $spacing-md;
+  }
+
+  p {
+    color: $secondary-color;
+    font-size: 1.1rem;
+    margin: 0;
+  }
+}
+
+.flowSelection {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: $spacing-lg;
+
+  @include respond-to(md) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.flowCard {
+  @include card-style;
+  text-align: center;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  }
+
+  h3 {
+    color: $primary-color;
+    font-size: 1.3rem;
+    margin-bottom: $spacing-md;
+  }
+
+  p {
+    color: $secondary-color;
+    margin-bottom: $spacing-lg;
+    line-height: 1.6;
+  }
+}

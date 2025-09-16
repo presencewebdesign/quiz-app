@@ -41,8 +41,6 @@ export const QuestionCard = ({
       ) : (
         <QuizResult
           isCorrect={isCorrect}
-          correctAnswer={correctAnswer}
-          userAnswer={userAnswer}
           feedback={question.feedback}
           showFeedback={showFeedback}
         />

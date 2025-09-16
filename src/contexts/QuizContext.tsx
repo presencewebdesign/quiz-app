@@ -112,8 +112,8 @@ export const QuizProvider = ({ children, quizData, flow }: QuizProviderProps) =>
 
   const calculateScore = (): ScoreResult => {
     // Get questions based on flow
-    let questions;
-    let userAnswersForScoring;
+    let questions: any[];
+    let userAnswersForScoring: Map<string, string>;
     
     if (flow === "flow1") {
       questions = quizData.activities[0]?.questions || [];

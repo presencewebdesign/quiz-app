@@ -5,6 +5,7 @@ export interface BaseQuestion {
   order: number;
   user_answers: string[];
   feedback: string;
+  uniqueId?: string;
 }
 
 export interface Activity {
@@ -117,8 +118,6 @@ export interface AnswerOptionsProps {
 
 export interface QuizResultProps {
   isCorrect: boolean;
-  correctAnswer: string;
-  userAnswer?: string;
   feedback?: string;
   onNext?: () => void;
   nextButtonText?: string;

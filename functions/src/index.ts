@@ -1,4 +1,4 @@
-import { onRequest } from "firebase-functions/https";
+import {onRequest} from "firebase-functions/https";
 import * as logger from "firebase-functions/logger";
 
 // CORS proxy function for quiz data
@@ -36,6 +36,6 @@ export const getQuizData = onRequest(async (req, res) => {
     res.status(200).json(data);
   } catch (error) {
     logger.error("Error fetching quiz data:", error);
-    res.status(500).json({ error: "Failed to fetch quiz data" });
+    res.status(500).json({error: "Failed to fetch quiz data"});
   }
 });

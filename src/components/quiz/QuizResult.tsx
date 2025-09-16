@@ -5,8 +5,6 @@ import styles from "./QuizResult.module.scss";
 
 export const QuizResult = ({
   isCorrect,
-  correctAnswer,
-  userAnswer,
   feedback,
   onNext,
   nextButtonText,

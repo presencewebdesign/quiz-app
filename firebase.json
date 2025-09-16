@@ -1,11 +1,7 @@
 {
   "hosting": {
     "public": "build",
-    "ignore": [
-      "firebase.json",
-      "**/.*",
-      "**/node_modules/**"
-    ],
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "rewrites": [
       {
         "source": "**",
@@ -19,6 +15,15 @@
           {
             "key": "Cache-Control",
             "value": "max-age=31536000"
+          }
+        ]
+      },
+      {
+        "source": "**",
+        "headers": [
+          {
+            "key": "Content-Security-Policy",
+            "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://s3.eu-west-2.amazonaws.com https://us-central1-quiz-app-98108.cloudfunctions.net https://us-central1-quiz-app-98108.cloudfunctions.net/getQuizData; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; report-uri /csp-report;"
           }
         ]
       }

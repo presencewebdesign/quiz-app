@@ -2,7 +2,6 @@ import { useQuery } from "@tanstack/react-query";
 import type { QuizData, Flow1Activity, Flow2Activity } from "@/types/quiz";
 
 const QUIZ_QUERY_KEY = "quiz-data";
-
 // Use Firebase Function for CORS proxy
 const API_URL =
   "https://us-central1-quiz-app-98108.cloudfunctions.net/getQuizData";

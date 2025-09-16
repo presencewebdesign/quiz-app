@@ -38,52 +38,6 @@
   }
 }
 
-.scoreContainer {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 400px;
-}
-
-.scoreCard {
-  @include card-style;
-  text-align: center;
-  padding: $spacing-xl;
-  max-width: 500px;
-  width: 100%;
-
-  h2 {
-    color: $primary-color;
-    font-size: 1.8rem;
-    margin-bottom: $spacing-lg;
-    font-weight: 600;
-  }
-}
-
-.scoreResults {
-  margin-bottom: $spacing-lg;
-
-  .scoreNumber {
-    font-size: 3rem;
-    font-weight: bold;
-    color: $primary-color;
-    margin-bottom: $spacing-sm;
-  }
-
-  .scorePercentage {
-    font-size: 2rem;
-    font-weight: 600;
-    color: $success-color;
-  }
-}
-
-.scoreMessage {
-  font-size: 1.1rem;
-  color: $secondary-color;
-  margin-bottom: $spacing-xl;
-  line-height: 1.6;
-}
-
 .questionContainer {
   margin-bottom: $spacing-xl;
 }

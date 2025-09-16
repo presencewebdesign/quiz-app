@@ -94,36 +94,8 @@ export const Flow1Quiz = () => {
   // Show score screen if all questions are answered
   if (showScore) {
     const score = calculateScore();
-    return (
-      <div className={styles.flow1Quiz}>
-        <div className={styles.header}>
-          <h1>{quizData.heading}</h1>
-          <h2>{activity.activity_name} - Complete!</h2>
-        </div>
-
-        <div className={styles.scoreContainer}>
-          <div className={styles.scoreCard}>
-            <h2>🎉 Quiz Complete!</h2>
-            <div className={styles.scoreResults}>
-              <div className={styles.scoreNumber}>
-                {score.correct} / {score.total}
-              </div>
-              <div className={styles.scorePercentage}>
-                {score.percentage}%
-              </div>
-            </div>
-            <p className={styles.scoreMessage}>
-              You answered {score.correct} out of {score.total} questions correctly.
-            </p>
-            <div className={styles.navigation}>
-              <Button onClick={handleBackToHome} variant="primary">
-                Back to Home
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+    navigate("/score", { state: { score, flow: "flow1" } });
+    return null; // Component will unmount due to navigation
   }
 
   return (

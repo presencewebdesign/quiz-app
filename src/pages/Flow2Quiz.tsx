@@ -4,6 +4,7 @@ import { Button } from "@/components/common/Button";
 import { useNavigate } from "react-router-dom";
 import { calculateScore } from "@/utils/textParser";
 import type { Flow2Activity } from "@/types/quiz";
+import { useState } from "react";
 import styles from "./Flow2Quiz.module.scss";
 
 export const Flow2Quiz = () => {
@@ -15,6 +16,9 @@ export const Flow2Quiz = () => {
     setAnswer,
     nextRound,
   } = useQuiz();
+
+  // State for tracking current question within a round
+  const [currentQuestionInRound, setCurrentQuestionInRound] = useState(0);
 
   const activity = quizData.activities[1] as unknown as Flow2Activity;
   
@@ -32,13 +36,22 @@ export const Flow2Quiz = () => {
     return <div>Loading round data...</div>;
   }
   
-  const question = currentRoundData.questions[0]; // Only use the first question of each round
+  const question = currentRoundData.questions[currentQuestionInRound];
   if (!question) {
     return <div>Loading question data...</div>;
   }
   
   const isLastRound = currentRound >= activity.questions.length - 1;
+  const isLastQuestionInRound = currentQuestionInRound >= currentRoundData.questions.length - 1;
   const overallProgress = ((currentRound + 1) / activity.questions.length) * 100;
+
+  // Check if all questions in current round are answered (regardless of correctness)
+  const areAllQuestionsInRoundAnswered = () => {
+    return currentRoundData.questions.every(q => {
+      const uniqueKey = `${currentRound}-${q.order}`;
+      return userAnswers.has(uniqueKey);
+    });
+  };
 
   // Generate answer options for the question
   const generateAnswerOptions = (question: any) => {
@@ -111,12 +124,22 @@ export const Flow2Quiz = () => {
     // Use round and question order to make key unique
     const uniqueKey = `${currentRound}-${question.order}`;
     setAnswer(uniqueKey, answer);
+    
+    // Auto-progress to next question in round if not the last question
+    if (!isLastQuestionInRound) {
+      setTimeout(() => {
+        setCurrentQuestionInRound(currentQuestionInRound + 1);
+      }, 1000); // Small delay to show the result
+    }
   };
 
   const handleNextRound = () => {
     if (isLastRound) {
-      // Calculate final score
-      const allQuestions = activity.questions.map(round => round.questions[0]);
+      // Calculate final score - include all questions from all rounds
+      const allQuestions: any[] = [];
+      activity.questions.forEach(round => {
+        allQuestions.push(...round.questions);
+      });
       
       // Convert userAnswers to use question order as key for score calculation
       const scoreAnswers = new Map<string, string>();
@@ -129,16 +152,14 @@ export const Flow2Quiz = () => {
       const score = calculateScore(scoreAnswers, allQuestions);
       navigate("/score", { state: { score, flow: "flow2" } });
     } else {
-      // Only allow progression if current round is completed correctly
-      if (isCorrect) {
+      // Allow progression if ALL questions in current round are answered (regardless of correctness)
+      if (areAllQuestionsInRoundAnswered()) {
+        setCurrentQuestionInRound(0); // Reset to first question of next round
         nextRound();
       }
     }
   };
 
-  const handleBackToHome = () => {
-    navigate("/");
-  };
 
   const answerOptions = generateAnswerOptions(question);
   // Use round and question order to make key unique
@@ -158,7 +179,7 @@ export const Flow2Quiz = () => {
         <h2>{activity.activity_name}</h2>
         <div className={styles.progressContainer}>
           <div className={styles.roundInfo}>
-            Round {currentRound + 1} of {activity.questions.length}
+            Round {currentRound + 1} of {activity.questions.length} - Question {currentQuestionInRound + 1} of {currentRoundData.questions.length}
           </div>
           <ProgressBar 
             progress={overallProgress} 
@@ -194,10 +215,14 @@ export const Flow2Quiz = () => {
             <div className={styles.result}>
               {isCorrect ? (
                 <div className={styles.congratulations}>
-                  <h2 className={styles.congratsTitle}>🎉 Congratulations!</h2>
+                  <h2 className={styles.congratsTitle}>🎉 Correct!</h2>
                   <p className={styles.congratsMessage}>
-                    You passed Round {currentRound + 1}!
-                    {!isLastRound && " You can now proceed to the next round."}
+                    {isLastQuestionInRound && areAllQuestionsInRoundAnswered() 
+                      ? isLastRound 
+                        ? `You completed Round ${currentRound + 1}! Click "View Score" to see your results.`
+                        : `You completed Round ${currentRound + 1}! You can now proceed to the next round.`
+                      : "Great job! Moving to the next question in this round."
+                    }
                   </p>
                   <div className={styles.correctAnswer}>
                     <p><strong>Correct Answer:</strong> {question.feedback}</p>
@@ -206,7 +231,14 @@ export const Flow2Quiz = () => {
               ) : (
                 <div className={styles.incorrectResult}>
                   <h2 className={styles.incorrectTitle}>❌ Incorrect</h2>
-                  <p className={styles.incorrectMessage}>Better luck next time!</p>
+                  <p className={styles.incorrectMessage}>
+                    {isLastQuestionInRound && areAllQuestionsInRoundAnswered() 
+                      ? isLastRound 
+                        ? `You completed Round ${currentRound + 1}! Click "View Score" to see your results.`
+                        : `You completed Round ${currentRound + 1}! You can now proceed to the next round.`
+                      : "Keep going! Moving to the next question in this round."
+                    }
+                  </p>
                   <div className={styles.correctAnswer}>
                     <p><strong>Correct Answer:</strong> {question.feedback}</p>
                   </div>
@@ -214,18 +246,18 @@ export const Flow2Quiz = () => {
               )}
               
               <div className={styles.actionButtons}>
-                {isLastRound ? (
-                  <Button onClick={handleBackToHome} variant="primary">
-                    Back to Home
+                {isLastRound && isLastQuestionInRound && areAllQuestionsInRoundAnswered() ? (
+                  <Button onClick={handleNextRound} variant="primary">
+                    View Score
                   </Button>
-                ) : isCorrect ? (
+                ) : isLastQuestionInRound && areAllQuestionsInRoundAnswered() ? (
                   <Button onClick={handleNextRound} variant="primary">
                     Next Round
                   </Button>
                 ) : (
-                  <Button onClick={handleBackToHome} variant="secondary">
-                    Back to Home
-                  </Button>
+                  <div className={styles.waitingMessage}>
+                    <p>Complete all questions in this round to proceed</p>
+                  </div>
                 )}
               </div>
             </div>

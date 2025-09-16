@@ -120,7 +120,7 @@ src/
 ```bash
 # Clone the repository
 git clone <repository-url>
-cd quiz-press-and-assessment
+cd error-find-quiz
 
 # Install dependencies
 npm install

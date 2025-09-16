@@ -2,7 +2,7 @@ import { useQuiz } from "@/contexts/QuizContext";
 import { Button } from "@/components/common/Button";
 import { ProgressBar } from "@/components/common/ProgressBar";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import styles from "./Flow1Quiz.module.scss";
 
 export const Flow1Quiz = () => {
@@ -91,11 +91,17 @@ export const Flow1Quiz = () => {
   // Remove asterisks from stimulus for display (make it more challenging)
   const displayStimulus = currentQuestion.stimulus.replace(/\*([^*]+)\*/g, '$1');
 
-  // Show score screen if all questions are answered
+  // Navigate to score screen when quiz is completed
+  useEffect(() => {
+    if (showScore) {
+      const score = calculateScore();
+      navigate("/score", { state: { score, flow: "flow1" } });
+    }
+  }, [showScore, navigate]);
+
+  // Show loading state while navigating
   if (showScore) {
-    const score = calculateScore();
-    navigate("/score", { state: { score, flow: "flow1" } });
-    return null; // Component will unmount due to navigation
+    return <div>Loading...</div>;
   }
 
   return (

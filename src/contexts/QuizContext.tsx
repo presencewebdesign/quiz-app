@@ -1,5 +1,6 @@
 import { createContext, useContext, useReducer, ReactNode } from "react";
-import type { QuizData, QuizState } from "@/types/quiz";
+import { QuizEngine } from "@/services/quizEngine";
+import type { QuizData, QuizState, ScoreResult } from "@/types/quiz";
 
 interface QuizContextType {
   quizData: QuizData;
@@ -13,6 +14,7 @@ interface QuizContextType {
   previousQuestion: () => void;
   nextRound: () => void;
   resetQuiz: () => void;
+  calculateScore: () => ScoreResult;
 }
 
 const QuizContext = createContext<QuizContextType | null>(null);
@@ -87,6 +89,8 @@ export const QuizProvider = ({ children, quizData, flow }: QuizProviderProps) =>
   });
 
   const setAnswer = (questionId: string, answer: string) => {
+    // Debug logging can be enabled for troubleshooting
+    // console.log('Setting answer:', { questionId, answer });
     dispatch({ type: "SET_ANSWER", payload: { questionId, answer } });
   };
 
@@ -106,6 +110,55 @@ export const QuizProvider = ({ children, quizData, flow }: QuizProviderProps) =>
     dispatch({ type: "RESET_QUIZ" });
   };
 
+  const calculateScore = (): ScoreResult => {
+    // Get questions based on flow
+    let questions;
+    let userAnswersForScoring;
+    
+    if (flow === "flow1") {
+      questions = quizData.activities[0]?.questions || [];
+      userAnswersForScoring = state.userAnswers;
+    } else {
+      // For flow2, collect all questions from all rounds with unique identifiers
+      questions = [];
+      quizData.activities[1]?.questions?.forEach((round: any, roundIndex: number) => {
+        round.questions.forEach((question: any) => {
+          // Create a unique identifier for each question
+          const uniqueQuestion = {
+            ...question,
+            uniqueId: `${roundIndex}-${question.order}` // This will be used for matching
+          };
+          questions.push(uniqueQuestion);
+        });
+      });
+      
+      // Convert Flow2 userAnswers to use unique question identifiers
+      userAnswersForScoring = new Map<string, string>();
+      state.userAnswers.forEach((answer, key) => {
+        // Key is already in format "round-questionOrder", use it directly
+        userAnswersForScoring.set(key, answer);
+      });
+    }
+    
+    const score = QuizEngine.calculateScore(userAnswersForScoring, questions);
+    
+    // Debug logging can be enabled for troubleshooting
+    // console.log('Score Calculation Debug:', {
+    //   flow,
+    //   originalUserAnswers: Array.from(state.userAnswers.entries()),
+    //   convertedUserAnswers: Array.from(userAnswersForScoring.entries()),
+    //   questionsCount: questions.length,
+    //   questions: questions.map(q => ({ 
+    //     order: q.order, 
+    //     uniqueId: q.uniqueId || q.order.toString(),
+    //     stimulus: q.stimulus 
+    //   })),
+    //   score
+    // });
+    
+    return score;
+  };
+
   return (
     <QuizContext.Provider
       value={{
@@ -120,6 +173,7 @@ export const QuizProvider = ({ children, quizData, flow }: QuizProviderProps) =>
         previousQuestion,
         nextRound,
         resetQuiz,
+        calculateScore,
       }}
     >
       {children}

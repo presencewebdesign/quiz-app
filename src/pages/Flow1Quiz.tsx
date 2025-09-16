@@ -1,59 +1,29 @@
 import { useQuiz } from "@/contexts/QuizContext";
 import { Button } from "@/components/common/Button";
-import { ProgressBar } from "@/components/common/ProgressBar";
-import { parseFeedback } from "@/utils/textParser";
+import { QuizProgress } from "@/components/quiz/QuizProgress";
+import { QuestionCard } from "@/components/quiz/QuestionCard";
 import { useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import styles from "./Flow1Quiz.module.scss";
 
 export const Flow1Quiz = () => {
   const navigate = useNavigate();
-  const {
-    quizData,
-    userAnswers,
-    setAnswer,
+  const { 
+    quizData, 
+    userAnswers, 
+    currentQuestionIndex, 
+    setAnswer, 
+    nextQuestion, 
+    calculateScore 
   } = useQuiz();
 
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [showScore, setShowScore] = useState(false);
 
   const activity = quizData.activities[0];
   const questions = activity.questions;
   const currentQuestion = questions[currentQuestionIndex];
   const isLastQuestion = currentQuestionIndex === questions.length - 1;
-  
-  // Generate answer options for the question
-  const generateAnswerOptions = (question: any) => {
-    const options: Array<{ value: string; label: string; isCorrect: boolean }> = [];
-    
-    // Add the correct answer (from feedback)
-    const correctAnswer = question.feedback.replace(/\*([^*]+)\*/g, '$1');
-    options.push({ value: correctAnswer, label: correctAnswer, isCorrect: true });
-    
-    // Add the incorrect answer (from stimulus)
-    const incorrectAnswer = question.stimulus.replace(/\*([^*]+)\*/g, '$1');
-    if (incorrectAnswer !== correctAnswer) {
-      options.push({ value: incorrectAnswer, label: incorrectAnswer, isCorrect: false });
-    }
-    
-    // Add some common alternatives for variety
-    const alternatives = [
-      question.stimulus.replace(/\*([^*]+)\*/g, 'playing'),
-      question.stimulus.replace(/\*([^*]+)\*/g, 'to play'),
-      question.stimulus.replace(/\*([^*]+)\*/g, 'play'),
-    ];
-    
-    alternatives.forEach(alt => {
-      if (alt !== correctAnswer && alt !== incorrectAnswer && !options.find(opt => opt.value === alt)) {
-        options.push({ value: alt, label: alt, isCorrect: false });
-      }
-    });
-    
-    // Randomize the order of options to prevent easy guessing
-    const shuffledOptions = options.slice(0, 4).sort(() => Math.random() - 0.5);
-    
-    return shuffledOptions;
-  };
+  const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
 
   const handleAnswer = (answer: string) => {
     setAnswer(currentQuestion.order.toString(), answer);
@@ -63,7 +33,7 @@ export const Flow1Quiz = () => {
     if (isLastQuestion) {
       setShowScore(true);
     } else {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
+      nextQuestion();
     }
   };
 
@@ -71,29 +41,7 @@ export const Flow1Quiz = () => {
     navigate("/");
   };
 
-  const calculateScore = () => {
-    let correctCount = 0;
-    questions.forEach((q: any) => {
-      const userAnswer = userAnswers.get(q.order.toString());
-      const correctAnswer = q.feedback.replace(/\*([^*]+)\*/g, '$1');
-      if (userAnswer === correctAnswer) {
-        correctCount++;
-      }
-    });
-    return {
-      correct: correctCount,
-      total: questions.length,
-      percentage: Math.round((correctCount / questions.length) * 100)
-    };
-  };
-
-  const answerOptions = generateAnswerOptions(currentQuestion);
   const userAnswer = userAnswers.get(currentQuestion.order.toString());
-  const isCorrect = userAnswer === currentQuestion.feedback.replace(/\*([^*]+)\*/g, '$1');
-  const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
-  
-  // Remove asterisks from stimulus for display (make it more challenging)
-  const displayStimulus = currentQuestion.stimulus.replace(/\*([^*]+)\*/g, '$1');
 
   // Navigate to score screen when quiz is completed
   useEffect(() => {
@@ -101,7 +49,7 @@ export const Flow1Quiz = () => {
       const score = calculateScore();
       navigate("/score", { state: { score, flow: "flow1" } });
     }
-  }, [showScore, navigate]);
+  }, [showScore, navigate, calculateScore]);
 
   // Show loading state while navigating
   if (showScore) {
@@ -113,55 +61,23 @@ export const Flow1Quiz = () => {
       <div className={styles.header}>
         <h1>{quizData.heading}</h1>
         <h2>{activity.activity_name}</h2>
-        <div className={styles.progressContainer}>
-          <div className={styles.questionInfo}>
-            Question {currentQuestionIndex + 1} of {questions.length}
-          </div>
-          <ProgressBar 
-            progress={progress} 
-            showPercentage 
-          />
-        </div>
+        <QuizProgress
+          currentIndex={currentQuestionIndex}
+          total={questions.length}
+          progress={progress}
+          showPercentage
+        />
       </div>
 
       <div className={styles.questionContainer}>
-        <div className={styles.questionCard}>
-          <div className={styles.questionText}>
-            <p className={styles.stimulus}>{displayStimulus}</p>
-          </div>
-
-          {!userAnswer ? (
-            <div className={styles.answerOptions}>
-              <h4>Choose the correct version:</h4>
-              {answerOptions.map((option, index) => (
-                <label key={index} className={styles.radioOption}>
-                  <input
-                    type="radio"
-                    name={`question-${currentQuestion.order}`}
-                    value={option.value}
-                    checked={userAnswer === option.value}
-                    onChange={() => handleAnswer(option.value)}
-                  />
-                  <span className={styles.radioLabel}>{option.label}</span>
-                </label>
-              ))}
-            </div>
-          ) : (
-            <div className={styles.result}>
-              {isCorrect ? (
-                <div className={styles.congratulations}>
-                  <h3>🎉 Correct!</h3>
-                  <p>You selected the right answer.</p>
-                </div>
-              ) : (
-                <div className={styles.incorrect}>
-                  <h3>❌ Incorrect</h3>
-                  <p>The correct answer is: <span dangerouslySetInnerHTML={{ __html: parseFeedback(currentQuestion.feedback) }} /></p>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
+        <QuestionCard
+          question={currentQuestion}
+          userAnswer={userAnswer}
+          onAnswer={handleAnswer}
+          showFeedback={true}
+          questionNumber={currentQuestionIndex + 1}
+          totalQuestions={questions.length}
+        />
 
         <div className={styles.navigation}>
           <Button onClick={handleBackToHome} variant="secondary">

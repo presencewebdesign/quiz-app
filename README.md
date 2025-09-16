@@ -15,6 +15,50 @@ This application implements two distinct quiz flows for identifying grammatical 
 - **Flow 1**: Sequential questions (5 total) with progress tracking and score screen
 - **Flow 2**: Rounds-based questions where users must pass each round to proceed
 
+## 🏆 Score Calculation System
+
+The application features a robust, centralized score calculation system that handles both quiz flows consistently:
+
+### Key Features
+
+- **Centralized Logic**: Uses `QuizEngine` service for consistent scoring across both flows
+- **Flow-Specific Handling**: Automatically handles different data structures for Flow1 and Flow2
+- **Unique Identifiers**: Prevents conflicts in Flow2 where questions across rounds may have duplicate order values
+- **Real-time Validation**: Compares user answers with correct answers extracted from question feedback
+- **Comprehensive Debugging**: Includes detailed logging for troubleshooting and verification
+
+### How It Works
+
+1. **Answer Extraction**: Correct answers are extracted from `question.feedback` (with asterisks removed)
+2. **User Answer Matching**: Direct text comparison between user selection and correct answer
+3. **Flow-Specific Processing**:
+   - **Flow1**: Uses simple question order keys (`"1"`, `"2"`, `"3"`)
+   - **Flow2**: Uses unique identifiers (`"0-1"`, `"1-2"`, `"2-1"`) to handle duplicate question orders
+4. **Score Calculation**: Returns `{ correct, total, percentage }` for display
+
+### Technical Implementation
+
+```typescript
+// Centralized score calculation
+const score = QuizEngine.calculateScore(userAnswers, questions);
+
+// Flow-specific handling in context
+if (flow === "flow1") {
+  questions = quizData.activities[0]?.questions || [];
+} else {
+  // Flow2: Generate unique identifiers
+  questions = [];
+  quizData.activities[1]?.questions?.forEach((round, roundIndex) => {
+    round.questions.forEach((question) => {
+      questions.push({
+        ...question,
+        uniqueId: `${roundIndex}-${question.order}`,
+      });
+    });
+  });
+}
+```
+
 ## 📋 Original Project Brief
 
 ### The Task

@@ -1,0 +1,70 @@
+@use "sass:color";
+
+// Mixins are automatically imported by Vite
+
+.result {
+  text-align: center;
+  padding: $spacing-lg;
+}
+
+.congratulations {
+  .congratsTitle {
+    color: $success-color;
+    font-size: 2rem;
+    margin-bottom: $spacing-md;
+    font-weight: 700;
+  }
+
+  .congratsMessage {
+    color: $success-color;
+    font-size: 1.3rem;
+    margin-bottom: $spacing-lg;
+    font-weight: 500;
+  }
+
+  h3 {
+    color: $success-color;
+    font-size: 1.5rem;
+    margin-bottom: $spacing-md;
+    font-weight: 600;
+  }
+
+  p {
+    color: $success-color;
+    font-size: 1.1rem;
+    margin-bottom: $spacing-lg;
+  }
+}
+
+.incorrect {
+  h3 {
+    color: $danger-color;
+    font-size: 1.5rem;
+    margin-bottom: $spacing-md;
+    font-weight: 600;
+  }
+
+  p {
+    color: $danger-color;
+    font-size: 1.1rem;
+    margin-bottom: $spacing-lg;
+  }
+}
+
+.feedback {
+  background-color: color.adjust($info-color, $lightness: 45%);
+  padding: $spacing-md;
+  border-radius: $border-radius;
+  border-left: 4px solid $info-color;
+  margin-bottom: $spacing-lg;
+
+  p {
+    font-size: 1rem;
+    color: #333;
+    margin: 0;
+  }
+}
+
+.actionButtons {
+  margin-top: $spacing-lg;
+}

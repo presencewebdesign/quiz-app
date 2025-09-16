@@ -603,19 +603,8 @@ export const Flow1Quiz = () => {
   };
 
   const calculateScore = () => {
-    let correctCount = 0;
-    questions.forEach((q: any) => {
-      const userAnswer = userAnswers.get(q.order.toString());
-      const correctAnswer = q.feedback.replace(/\*([^*]+)\*/g, '$1');
-      if (userAnswer === correctAnswer) {
-        correctCount++;
-      }
-    });
-    return {
-      correct: correctCount,
-      total: questions.length,
-      percentage: Math.round((correctCount / questions.length) * 100)
-    };
+    // Uses centralized QuizEngine for consistent score calculation
+    return QuizEngine.calculateScore(userAnswers, questions);
   };
 
   // Show score screen after all questions
@@ -809,17 +798,8 @@ export const Flow2Quiz = () => {
 
   const handleNextRound = () => {
     if (isLastRound) {
-      // Calculate final score and navigate to score page
-      const allQuestions = activity.questions.map(round => round.questions[0]);
-
-      // Convert userAnswers to use question order as key for score calculation
-      const scoreAnswers = new Map<string, string>();
-      userAnswers.forEach((answer, key) => {
-        const questionOrder = key.split('-')[1];
-        scoreAnswers.set(questionOrder, answer);
-      });
-
-      const score = calculateScore(scoreAnswers, allQuestions);
+      // Calculate final score using centralized QuizEngine
+      const score = calculateScore();
       navigate("/score", { state: { score, flow: "flow2" } });
     } else {
       // Only allow progression if current round is completed correctly

@@ -41,6 +41,18 @@
   margin-bottom: $spacing-xl;
 }
 
+.roundHeader {
+  text-align: center;
+  margin-bottom: $spacing-lg;
+
+  h3 {
+    color: $primary-color;
+    font-size: 1.3rem;
+    margin: 0;
+    font-weight: 600;
+  }
+}
+
 .questionCard {
   @include card-style;
   padding: $spacing-xl;

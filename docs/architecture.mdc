@@ -154,7 +154,116 @@ interface Flow2Architecture {
 - Context-aware answer generation based on error patterns
 - Conditional progression - must answer correctly to proceed
 - Round-based progress tracking
-- Score calculation with key conversion for compatibility
+- Score calculation with unique question identifiers for Flow2 compatibility
+
+## Score Calculation System
+
+### Centralized Score Engine
+
+The application uses a centralized `QuizEngine` class for consistent score calculation across both quiz flows:
+
+```typescript
+// services/quizEngine.ts
+export class QuizEngine {
+  static calculateScore(
+    userAnswers: Map<string, string>,
+    questions: Question[]
+  ): ScoreResult {
+    // Handles both Flow1 and Flow2 with unique question identifiers
+  }
+}
+```
+
+### Score Calculation Logic
+
+**Core Algorithm:**
+
+1. **Answer Extraction**: Correct answer extracted from `question.feedback` (asterisks removed)
+2. **User Answer Matching**: Direct text comparison between user selection and correct answer
+3. **Flow-Specific Handling**:
+   - **Flow1**: Uses question `order` as key (`"1"`, `"2"`, `"3"`)
+   - **Flow2**: Uses unique identifiers (`"0-1"`, `"1-2"`, `"2-1"`) to handle duplicate question orders across rounds
+
+**Implementation Details:**
+
+```typescript
+// For each question:
+const questionKey = question.uniqueId || question.order.toString();
+const userAnswer = userAnswers.get(questionKey);
+const correctAnswerText = question.feedback.replace(/\*([^*]+)\*/g, "$1");
+
+if (userAnswer === correctAnswerText) {
+  correct++;
+}
+```
+
+### Flow-Specific Score Handling
+
+**Flow1 (Sequential Questions):**
+
+- Direct mapping: `userAnswers.get(question.order.toString())`
+- Simple key structure: `"1"`, `"2"`, `"3"`
+
+**Flow2 (Rounds-based Questions):**
+
+- Unique identifier generation: `uniqueId: "${roundIndex}-${question.order}"`
+- Prevents conflicts when questions across rounds have same order values
+- Key conversion: `"0-1"` → matches question with `uniqueId: "0-1"`
+
+### Context Integration
+
+The score calculation is integrated into the `QuizContext`:
+
+```typescript
+// contexts/QuizContext.tsx
+const calculateScore = (): ScoreResult => {
+  if (flow === "flow1") {
+    questions = quizData.activities[0]?.questions || [];
+    userAnswersForScoring = state.userAnswers;
+  } else {
+    // Flow2: Generate unique identifiers and collect all questions
+    questions = [];
+    quizData.activities[1]?.questions?.forEach((round, roundIndex) => {
+      round.questions.forEach((question) => {
+        questions.push({
+          ...question,
+          uniqueId: `${roundIndex}-${question.order}`,
+        });
+      });
+    });
+    userAnswersForScoring = state.userAnswers; // Keys already in correct format
+  }
+
+  return QuizEngine.calculateScore(userAnswersForScoring, questions);
+};
+```
+
+### Debug and Monitoring
+
+The system includes comprehensive debug logging:
+
+```typescript
+console.log("Score Calculation Debug:", {
+  flow,
+  originalUserAnswers: Array.from(state.userAnswers.entries()),
+  convertedUserAnswers: Array.from(userAnswersForScoring.entries()),
+  questionsCount: questions.length,
+  questions: questions.map((q) => ({
+    order: q.order,
+    uniqueId: q.uniqueId || q.order.toString(),
+    stimulus: q.stimulus,
+  })),
+  score,
+});
+```
+
+**Benefits:**
+
+- **Consistency**: Same calculation logic for both flows
+- **Accuracy**: Handles Flow2's complex data structure correctly
+- **Maintainability**: Centralized logic in QuizEngine
+- **Debugging**: Comprehensive logging for troubleshooting
+- **Type Safety**: Full TypeScript support with proper interfaces
 
 ## Text Processing & User Experience Features
 

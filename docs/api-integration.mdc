@@ -58,6 +58,104 @@ interface Round {
 }
 ```
 
+## Score Calculation Integration
+
+### QuizEngine Service
+
+The application uses a centralized `QuizEngine` service for consistent score calculation across both quiz flows:
+
+```typescript
+// services/quizEngine.ts
+export class QuizEngine {
+  /**
+   * Calculate score based on user answers and questions
+   * Handles both Flow1 and Flow2 with unique question identifiers
+   */
+  static calculateScore(
+    userAnswers: Map<string, string>,
+    questions: Question[]
+  ): ScoreResult {
+    let correct = 0;
+
+    questions.forEach((question) => {
+      // Use uniqueId if available (for Flow2), otherwise use order (for Flow1)
+      const questionKey = question.uniqueId || question.order.toString();
+      const userAnswer = userAnswers.get(questionKey);
+
+      // The correct answer is the text from feedback (without asterisks)
+      const correctAnswerText = question.feedback.replace(/\*([^*]+)\*/g, "$1");
+
+      if (userAnswer && userAnswer === correctAnswerText) {
+        correct++;
+      }
+    });
+
+    return {
+      correct,
+      total: questions.length,
+      percentage: Math.round((correct / questions.length) * 100),
+    };
+  }
+}
+```
+
+### Context Integration
+
+The score calculation is integrated into the `QuizContext` for centralized state management:
+
+```typescript
+// contexts/QuizContext.tsx
+const calculateScore = (): ScoreResult => {
+  let questions;
+  let userAnswersForScoring;
+
+  if (flow === "flow1") {
+    questions = quizData.activities[0]?.questions || [];
+    userAnswersForScoring = state.userAnswers;
+  } else {
+    // Flow2: Generate unique identifiers and collect all questions
+    questions = [];
+    quizData.activities[1]?.questions?.forEach(
+      (round: any, roundIndex: number) => {
+        round.questions.forEach((question: any) => {
+          questions.push({
+            ...question,
+            uniqueId: `${roundIndex}-${question.order}`,
+          });
+        });
+      }
+    );
+    userAnswersForScoring = state.userAnswers;
+  }
+
+  return QuizEngine.calculateScore(userAnswersForScoring, questions);
+};
+```
+
+### Flow-Specific Handling
+
+**Flow1 (Sequential Questions):**
+
+- Direct key mapping: `userAnswers.get(question.order.toString())`
+- Simple key structure: `"1"`, `"2"`, `"3"`
+
+**Flow2 (Rounds-based Questions):**
+
+- Unique identifier generation: `uniqueId: "${roundIndex}-${question.order}"`
+- Prevents conflicts when questions across rounds have same order values
+- Answer keys: `"0-1"`, `"0-2"`, `"1-1"`, `"1-2"`
+
+### Score Result Interface
+
+```typescript
+// types/quiz.ts
+export interface ScoreResult {
+  correct: number; // Number of correct answers
+  total: number; // Total number of questions
+  percentage: number; // Percentage score (0-100)
+}
+```
+
 ## TanStack Query Integration
 
 ### Query Client Setup

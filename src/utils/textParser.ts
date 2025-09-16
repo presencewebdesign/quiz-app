@@ -36,29 +36,7 @@ export const compareAnswers = (
   return userAnswer.toLowerCase().trim() === correctAnswer.toLowerCase().trim();
 };
 
-// Calculate score based on answers
-export const calculateScore = (
-  userAnswers: Map<string, string>,
-  questions: any[]
-): { correct: number; total: number; percentage: number } => {
-  let correct = 0;
+// Re-export QuizEngine methods for backward compatibility
+import { QuizEngine } from "@/services/quizEngine";
 
-  questions.forEach((question) => {
-    const userAnswer = userAnswers.get(question.order.toString());
-    if (userAnswer) {
-      // Get the correct answer from feedback (remove asterisks)
-      const correctAnswer = question.feedback.replace(/\*([^*]+)\*/g, "$1");
-
-      // Compare user answer with correct answer
-      if (userAnswer === correctAnswer) {
-        correct++;
-      }
-    }
-  });
-
-  return {
-    correct,
-    total: questions.length,
-    percentage: Math.round((correct / questions.length) * 100),
-  };
-};
+export const calculateScore = QuizEngine.calculateScore;

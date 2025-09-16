@@ -3,10 +3,10 @@ import type { QuizData, Flow1Activity, Flow2Activity } from "@/types/quiz";
 
 const QUIZ_QUERY_KEY = "quiz-data";
 
-// Use proxy in development, direct URL in production
+// Use proxy in development, Firebase Function in production
 const API_URL = import.meta.env.DEV
   ? "/api/payload.json"
-  : "https://s3.eu-west-2.amazonaws.com/interview.mock.data/payload.json";
+  : "https://us-central1-quiz-app-98108.cloudfunctions.net/getQuizData";
 
 // Data normalization utilities
 const normalizeQuizData = (rawData: any): QuizData => {

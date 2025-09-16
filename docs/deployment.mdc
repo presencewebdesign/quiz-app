@@ -1,8 +1,12 @@
 # Deployment Documentation
 
+## Live Application
+
+🌐 **Web App URL**: [https://quiz-app-98108.web.app](https://quiz-app-98108.web.app)
+
 ## Overview
 
-This document outlines the deployment strategy for the Error Find Quiz application using Firebase Hosting. Firebase provides a robust, scalable hosting solution with excellent performance and global CDN distribution.
+This document outlines the deployment strategy for the Error Find Quiz application using Firebase Hosting. Firebase provides a robust, scalable hosting solution with excellent performance and global CDN distribution. The application is currently deployed and accessible at the URL above.
 
 ## Firebase Hosting Setup
 

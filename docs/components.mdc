@@ -1,8 +1,12 @@
 # Components Documentation
 
+## Live Application
+
+🌐 **Web App URL**: [https://quiz-app-98108.web.app](https://quiz-app-98108.web.app)
+
 ## Component Architecture Overview
 
-The quiz application follows a component-based architecture with clear separation of concerns. Components are organized into logical groups and follow consistent patterns for reusability and maintainability.
+The quiz application follows a component-based architecture with clear separation of concerns. Components are organized into logical groups and follow consistent patterns for reusability and maintainability. The current implementation includes fully functional Flow1Quiz and Flow2Quiz components with intelligent answer generation and proper state management.
 
 ## Component Hierarchy
 
@@ -553,7 +557,7 @@ export const Flow1Quiz = () => {
   const currentQuestion = questions[currentQuestionIndex];
   const isLastQuestion = currentQuestionIndex === questions.length - 1;
 
-  // Generate 4 answer options (1 correct + 3 incorrect)
+  // Generate 4 answer options (1 correct + 3 incorrect) with randomization
   const generateAnswerOptions = (question: any) => {
     const options: Array<{ value: string; label: string; isCorrect: boolean }> = [];
 
@@ -580,7 +584,10 @@ export const Flow1Quiz = () => {
       }
     });
 
-    return options.slice(0, 4);
+    // Randomize the order of options to prevent easy guessing
+    const shuffledOptions = options.slice(0, 4).sort(() => Math.random() - 0.5);
+
+    return shuffledOptions;
   };
 
   const handleAnswer = (answer: string) => {
@@ -687,7 +694,7 @@ export const Flow1Quiz = () => {
               ) : (
                 <div className={styles.incorrect}>
                   <h3>❌ Incorrect</h3>
-                  <p>The correct answer is: <strong>{currentQuestion.feedback.replace(/\*([^*]+)\*/g, '$1')}</strong></p>
+                  <p>The correct answer is: <span dangerouslySetInnerHTML={{ __html: parseFeedback(currentQuestion.feedback) }} /></p>
                 </div>
               )}
             </div>
@@ -718,6 +725,8 @@ export const Flow1Quiz = () => {
 - **Score Calculation**: Calculates final score based on all answers
 - **Score Screen**: Displays comprehensive results at the end
 - **No Error Hints**: Stimulus text displayed without asterisks for increased difficulty
+- **Randomized Answers**: Answer options are shuffled to prevent easy guessing
+- **Bold Highlighting**: Correct answers in feedback are displayed in **bold** using asterisks from JSON
 
 #### Flow2Quiz - Rounds-based Questions
 
@@ -734,7 +743,7 @@ export const Flow2Quiz = () => {
   const question = currentRoundData.questions[0]; // First question of current round
   const isLastRound = currentRound === activity.questions.length - 1;
 
-  // Generate intelligent answer options based on question patterns
+  // Generate intelligent answer options based on question patterns with randomization
   const generateAnswerOptions = (question: any) => {
     const options: Array<{ value: string; label: string; isCorrect: boolean }> = [];
 
@@ -786,7 +795,10 @@ export const Flow2Quiz = () => {
       }
     });
 
-    return options.slice(0, 4);
+    // Randomize the order of options to prevent easy guessing
+    const shuffledOptions = options.slice(0, 4).sort(() => Math.random() - 0.5);
+
+    return shuffledOptions;
   };
 
   const handleAnswer = (answer: string) => {
@@ -869,7 +881,7 @@ export const Flow2Quiz = () => {
               ) : (
                 <div className={styles.incorrect}>
                   <h3>❌ Incorrect. Better luck next time!</h3>
-                  <p>The correct answer is: <strong>{correctAnswer}</strong></p>
+                  <p>The correct answer is: <span dangerouslySetInnerHTML={{ __html: parseFeedback(question.feedback) }} /></p>
                 </div>
               )}
             </div>
@@ -900,6 +912,8 @@ export const Flow2Quiz = () => {
 - **Round Progress**: Shows "Round X of Y" with overall progress
 - **Score Navigation**: Navigates to shared ScorePage component
 - **No Error Hints**: Stimulus text displayed without asterisks for increased difficulty
+- **Randomized Answers**: Answer options are shuffled to prevent easy guessing
+- **Bold Highlighting**: Correct answers in feedback are displayed in **bold** using asterisks from JSON
 
 #### ScorePage
 
@@ -949,6 +963,117 @@ export const ScorePage = () => {
   );
 };
 ```
+
+## Text Processing Utilities
+
+The application includes specialized text processing utilities for handling quiz content and feedback display.
+
+### Text Parser Functions
+
+```typescript
+// utils/textParser.ts
+
+// Parse stimulus text to highlight errors
+export const parseStimulus = (stimulus: string): string => {
+  // Convert "*text*" to highlighted error text
+  return stimulus.replace(
+    /\*(.*?)\*/g,
+    '<span class="error-highlight">$1</span>'
+  );
+};
+
+// Parse feedback text to highlight correct answers in bold
+export const parseFeedback = (feedback: string): string => {
+  // Convert "*text*" to bold text
+  return feedback.replace(
+    /\*([^*]+)\*/g,
+    (match, group1) => `<strong>${group1}</strong>`
+  );
+};
+
+// Extract the error text for comparison
+export const extractError = (stimulus: string): string => {
+  const match = stimulus.match(/\*(.*?)\*/);
+  return match ? match[1] : "";
+};
+
+// Extract correct answer from feedback
+export const extractCorrectAnswer = (feedback: string): string => {
+  const match = feedback.match(/\*(.*?)\*/);
+  return match ? match[1] : "";
+};
+
+// Compare user answer with correct answer
+export const compareAnswers = (
+  userAnswer: string,
+  correctAnswer: string
+): boolean => {
+  return userAnswer.toLowerCase().trim() === correctAnswer.toLowerCase().trim();
+};
+
+// Calculate score based on answers
+export const calculateScore = (
+  userAnswers: Map<string, string>,
+  questions: any[]
+): { correct: number; total: number; percentage: number } => {
+  let correct = 0;
+
+  questions.forEach((question) => {
+    const userAnswer = userAnswers.get(question.order.toString());
+    if (userAnswer) {
+      // Get the correct answer from feedback (remove asterisks)
+      const correctAnswer = question.feedback.replace(/\*([^*]+)\*/g, "$1");
+
+      // Compare user answer with correct answer
+      if (userAnswer === correctAnswer) {
+        correct++;
+      }
+    }
+  });
+
+  return {
+    correct,
+    total: questions.length,
+    percentage: Math.round((correct / questions.length) * 100),
+  };
+};
+```
+
+### Answer Randomization
+
+Both quiz flows implement answer randomization to prevent easy guessing:
+
+```typescript
+// Randomize the order of options to prevent easy guessing
+const shuffledOptions = options.slice(0, 4).sort(() => Math.random() - 0.5);
+return shuffledOptions;
+```
+
+**Benefits:**
+
+- Prevents users from always selecting the first option
+- Increases quiz difficulty and fairness
+- Maintains educational value by requiring actual knowledge
+
+### Bold Highlighting Implementation
+
+Correct answers in feedback are displayed with bold formatting using the asterisks from the original JSON data:
+
+```typescript
+// Usage in components
+<p>The correct answer is: <span dangerouslySetInnerHTML={{ __html: parseFeedback(question.feedback) }} /></p>
+```
+
+**Example:**
+
+- Original feedback: `"The correct answer is *playing* football."`
+- Rendered output: `"The correct answer is **playing** football."`
+
+**Benefits:**
+
+- Visual emphasis on correct answers
+- Uses existing JSON data structure
+- Consistent formatting across both quiz flows
 
 ## Component Patterns
 

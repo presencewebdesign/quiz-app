@@ -1,5 +1,9 @@
 # Tech Stack Documentation
 
+## Live Application
+
+🌐 **Web App URL**: [https://quiz-app-98108.web.app](https://quiz-app-98108.web.app)
+
 ## Core Technologies
 
 ### Frontend Framework
@@ -272,8 +276,8 @@ $secondary-color: #6c757d;
 $success-color: #28a745;
 $danger-color: #dc3545;
 
-$font-family-base: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-  sans-serif;
+$font-family-base:
+  -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 $font-size-base: 16px;
 $line-height-base: 1.5;
 

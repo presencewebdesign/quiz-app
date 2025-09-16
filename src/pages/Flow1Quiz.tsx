@@ -1,6 +1,7 @@
 import { useQuiz } from "@/contexts/QuizContext";
 import { Button } from "@/components/common/Button";
 import { ProgressBar } from "@/components/common/ProgressBar";
+import { parseFeedback } from "@/utils/textParser";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import styles from "./Flow1Quiz.module.scss";
@@ -48,7 +49,10 @@ export const Flow1Quiz = () => {
       }
     });
     
-    return options.slice(0, 4); // Limit to 4 options
+    // Randomize the order of options to prevent easy guessing
+    const shuffledOptions = options.slice(0, 4).sort(() => Math.random() - 0.5);
+    
+    return shuffledOptions;
   };
 
   const handleAnswer = (answer: string) => {
@@ -152,7 +156,7 @@ export const Flow1Quiz = () => {
               ) : (
                 <div className={styles.incorrect}>
                   <h3>❌ Incorrect</h3>
-                  <p>The correct answer is: <strong>{currentQuestion.feedback.replace(/\*([^*]+)\*/g, '$1')}</strong></p>
+                  <p>The correct answer is: <span dangerouslySetInnerHTML={{ __html: parseFeedback(currentQuestion.feedback) }} /></p>
                 </div>
               )}
             </div>

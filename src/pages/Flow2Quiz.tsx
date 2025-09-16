@@ -2,7 +2,7 @@ import { useQuiz } from "@/contexts/QuizContext";
 import { ProgressBar } from "@/components/common/ProgressBar";
 import { Button } from "@/components/common/Button";
 import { useNavigate } from "react-router-dom";
-import { calculateScore } from "@/utils/textParser";
+import { calculateScore, parseFeedback } from "@/utils/textParser";
 import type { Flow2Activity } from "@/types/quiz";
 import { useState } from "react";
 import styles from "./Flow2Quiz.module.scss";
@@ -117,7 +117,10 @@ export const Flow2Quiz = () => {
       }
     });
     
-    return options.slice(0, 4); // Limit to 4 options
+    // Randomize the order of options to prevent easy guessing
+    const shuffledOptions = options.slice(0, 4).sort(() => Math.random() - 0.5);
+    
+    return shuffledOptions;
   };
 
   const handleAnswer = (answer: string) => {
@@ -225,7 +228,7 @@ export const Flow2Quiz = () => {
                     }
                   </p>
                   <div className={styles.correctAnswer}>
-                    <p><strong>Correct Answer:</strong> {question.feedback}</p>
+                    <p><strong>Correct Answer:</strong> <span dangerouslySetInnerHTML={{ __html: parseFeedback(question.feedback) }} /></p>
                   </div>
                 </div>
               ) : (
@@ -240,7 +243,7 @@ export const Flow2Quiz = () => {
                     }
                   </p>
                   <div className={styles.correctAnswer}>
-                    <p><strong>Correct Answer:</strong> {question.feedback}</p>
+                    <p><strong>Correct Answer:</strong> <span dangerouslySetInnerHTML={{ __html: parseFeedback(question.feedback) }} /></p>
                   </div>
                 </div>
               )}

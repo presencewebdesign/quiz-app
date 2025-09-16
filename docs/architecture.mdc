@@ -2,7 +2,13 @@
 
 ## Overview
 
-This document outlines the architecture of the Error Find Quiz application. The application demonstrates modern React patterns, TypeScript best practices, and scalable architecture principles.
+This document outlines the architecture of the Error Find Quiz application. The application demonstrates modern React patterns, TypeScript best practices, and scalable architecture principles. The app is deployed on Firebase Hosting and accessible at: **https://quiz-app-98108.web.app**
+
+## Live Application
+
+🌐 **Web App URL**: [https://quiz-app-98108.web.app](https://quiz-app-98108.web.app)
+
+The application is live and fully functional with both quiz flows implemented and working.
 
 ## High-Level Architecture
 
@@ -84,7 +90,9 @@ src/
 
 ## Flow Architecture
 
-### Flow 1: Sequential Questions
+### Flow 1: Sequential Questions (Implemented)
+
+**Current Implementation**: `src/pages/Flow1Quiz.tsx`
 
 ```typescript
 interface Flow1Architecture {
@@ -97,11 +105,27 @@ interface Flow1Architecture {
     "Immediate feedback per question",
     "Score screen with percentage",
     "Sequential navigation regardless of correctness",
+    "Multiple choice answer options",
+    "Intelligent answer generation",
+    "Randomized answer order",
+    "Bold highlighting for correct answers",
   ];
+  stateManagement: "React Context + useState";
+  answerStorage: "Map<string, string> with question order as key";
 }
 ```
 
-### Flow 2: Rounds-based Questions
+**Key Implementation Details**:
+
+- Uses `useQuiz()` context for state management
+- Generates 4 answer options per question (1 correct + 3 incorrect)
+- Progress tracking with visual progress bar
+- Score calculation at the end of all questions
+- Navigation to score screen after completion
+
+### Flow 2: Rounds-based Questions (Implemented)
+
+**Current Implementation**: `src/pages/Flow2Quiz.tsx`
 
 ```typescript
 interface Flow2Architecture {
@@ -115,9 +139,77 @@ interface Flow2Architecture {
     "Unique answer keys (round-questionOrder)",
     "Intelligent answer generation",
     "Score page navigation",
+    "Context-aware alternatives",
+    "Randomized answer order",
+    "Bold highlighting for correct answers",
   ];
+  stateManagement: "React Context + useState";
+  answerStorage: "Map<string, string> with 'round-questionOrder' format";
 }
 ```
+
+**Key Implementation Details**:
+
+- Uses unique answer keys: `${currentRound}-${question.order}`
+- Context-aware answer generation based on error patterns
+- Conditional progression - must answer correctly to proceed
+- Round-based progress tracking
+- Score calculation with key conversion for compatibility
+
+## Text Processing & User Experience Features
+
+### Answer Randomization
+
+Both quiz flows implement answer randomization to enhance quiz fairness and educational value:
+
+```typescript
+// Implementation in both Flow1Quiz and Flow2Quiz
+const shuffledOptions = options.slice(0, 4).sort(() => Math.random() - 0.5);
+```
+
+**Architecture Benefits:**
+
+- **Fairness**: Prevents pattern recognition from giving unfair advantages
+- **Educational Value**: Forces users to actually understand the content
+- **Consistency**: Applied uniformly across both quiz flows
+- **Performance**: Minimal computational overhead
+
+### Bold Highlighting System
+
+The application uses a sophisticated text processing system to highlight correct answers:
+
+```typescript
+// utils/textParser.ts
+export const parseFeedback = (feedback: string): string => {
+  return feedback.replace(
+    /\*([^*]+)\*/g,
+    (match, group1) => `<strong>${group1}</strong>`
+  );
+};
+```
+
+**Architecture Benefits:**
+
+- **Data-Driven**: Uses existing JSON asterisk markers
+- **Consistent**: Uniform formatting across all feedback displays
+- **Maintainable**: Centralized text processing logic
+- **Accessible**: Clear visual emphasis for correct answers
+
+### Text Processing Pipeline
+
+```mermaid
+graph LR
+    A[JSON Data with Asterisks] --> B[parseFeedback Function]
+    B --> C[HTML with Bold Tags]
+    C --> D[dangerouslySetInnerHTML]
+    D --> E[Rendered Bold Text]
+```
+
+**Security Considerations:**
+
+- Uses `dangerouslySetInnerHTML` only with controlled, sanitized input
+- Asterisk patterns are validated before processing
+- No user input is processed through this pipeline
 
 ## Error Handling Strategy
 

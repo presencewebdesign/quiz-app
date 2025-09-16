@@ -2,12 +2,61 @@
 
 A modern React TypeScript application demonstrating error detection in written text through an interactive quiz interface.
 
+## 🌐 Live Application
+
+**Try the app online**: [https://quiz-app-98108.web.app](https://quiz-app-98108.web.app)
+
+The application is fully deployed and functional with both quiz flows available for testing.
+
 ## 🎯 Overview
 
 This application implements two distinct quiz flows for identifying grammatical errors in text:
 
 - **Flow 1**: Sequential questions (5 total) with progress tracking and score screen
 - **Flow 2**: Rounds-based questions where users must pass each round to proceed
+
+## 📋 Original Project Brief
+
+### The Task
+
+Build and deploy a simple TypeScript React web app which implements 2 flows of a simple quiz application.
+
+### Application Structure
+
+The application has 3 main parts/screens:
+
+1. **Home Screen**: Contains 2 buttons, each starting one of the flows
+2. **Question Screens**: Display quiz multiple choice questions for each flow
+3. **Score Screen**: Displays the score to the user with a button to return to home
+
+### The Two Flows
+
+**Flow 1 (Sequential)**:
+
+- Iterates through all questions
+- When all questions are answered, displays the score screen
+
+**Flow 2 (Rounds-based)**:
+
+- Iterates through multiple sets of questions (rounds)
+- After each set, prompts user to "take the next round"
+- When all rounds are completed, shows the score screen
+
+### Data Source
+
+- Quiz questions and answers come from API: `https://s3.eu-west-2.amazonaws.com/interview.mock.data/payload.json`
+- Two types of questions with different structures
+- Must inspect API structure and implement accordingly
+
+### Requirements Checklist ✅
+
+- [x] **Built with React using TypeScript**
+- [x] **Pulls from the API** - Successfully integrated with mock API
+- [x] **App looks presentable** - Clean, modern UI with responsive design
+- [x] **App deployed** - Live at https://quiz-app-98108.web.app
+- [x] **Architectural decisions** - Well-structured, reusable code
+- [x] **Documentation** - Comprehensive README and docs
+- [x] **Reusable code** - Organized components and utilities
 
 ## 🚀 Features
 
@@ -97,30 +146,62 @@ npm run test         # Run tests
 npm run deploy       # Build and deploy to Firebase
 ```
 
-## 🎮 Usage
+## 🎮 User Flow & Usage
 
-### Flow 1: Sequential Questions
+### Intended User Journey (Based on Brief)
 
-1. Click "Start Flow 1" on the home page
-2. Answer all 5 questions in sequence (progress tracked with visual bar)
-3. Get immediate feedback on each answer
-4. View comprehensive score screen with percentage results
-5. Navigate back to home or restart
+#### 1. Home Screen Entry Point
 
-### Flow 2: Rounds-based Questions
+- User lands on home page with 2 clear buttons
+- **"Start Flow 1"** - Sequential quiz flow
+- **"Start Flow 2"** - Rounds-based quiz flow
 
-1. Click "Start Flow 2" on the home page
-2. Answer the question in Round 1 correctly to proceed
-3. Complete each round sequentially (must pass to unlock next round)
-4. View round progress with "Round X of Y" indicator
-5. Navigate to score screen after completing all rounds
+#### 2. Flow 1: Sequential Questions Journey
 
-### Question Format
+1. **Start**: Click "Start Flow 1" button
+2. **Question Loop**: Answer all 5 questions in sequence
+   - Progress bar shows "Question X of 5"
+   - Multiple choice options for each question
+   - Immediate feedback after each answer
+3. **Completion**: After all questions answered → Score screen
+4. **Return**: Score screen has button to return to home
 
-- Read the text and identify grammatical errors yourself
-- Choose the correct version from multiple choice options
-- Submit your answer to see immediate feedback
-- View the correct answer and explanation
+#### 3. Flow 2: Rounds-based Questions Journey
+
+1. **Start**: Click "Start Flow 2" button
+2. **Round Loop**: Complete each round sequentially
+   - Round progress shows "Round X of Y"
+   - Must answer correctly to proceed to next round
+   - "Take the next round" prompt between rounds
+3. **Completion**: After all rounds completed → Score screen
+4. **Return**: Score screen has button to return to home
+
+### Question Format & Interaction
+
+- **Text Analysis**: Read text and identify grammatical errors
+- **Multiple Choice**: Select correct version from 4 options
+- **Immediate Feedback**: See correct/incorrect status instantly
+- **Progress Tracking**: Visual progress indicators throughout
+
+### Design Decisions vs Wireframes
+
+**Our Implementation Enhancements**:
+
+- ✅ **Enhanced UI**: Modern, clean design with better UX than basic wireframes
+- ✅ **Progress Indicators**: Visual progress bars for both flows
+- ✅ **Intelligent Answer Generation**: Context-aware incorrect options
+- ✅ **Error Highlighting**: Visual error highlighting in text
+- ✅ **Responsive Design**: Mobile-first approach not shown in wireframes
+- ✅ **Loading States**: Proper loading and error handling
+- ✅ **Score Details**: Comprehensive score display with percentages
+
+**Core Requirements Met**:
+
+- ✅ Home screen with 2 buttons (as specified)
+- ✅ Question screens for each flow (as specified)
+- ✅ Score screen with return button (as specified)
+- ✅ API integration (as specified)
+- ✅ Two distinct flows (as specified)
 
 ## 🔧 API Integration
 
@@ -238,11 +319,18 @@ npm run deploy
 
 ### Architecture Documentation
 
-- [Architecture Overview](docs/architecture.mdc)
-- [Tech Stack Details](docs/tech-stack.mdc)
-- [API Integration](docs/api-integration.mdc)
-- [Component Documentation](docs/components.mdc)
-- [Deployment Guide](docs/deployment.mdc)
+- [Project Brief & Requirements](docs/project-brief.mdc) - Original brief, requirements checklist, and implementation analysis
+- [Architecture Overview](docs/architecture.mdc) - Complete app architecture and flow implementation details
+- [Tech Stack Details](docs/tech-stack.mdc) - Technology choices, rationale, and implementation patterns
+- [API Integration](docs/api-integration.mdc) - API integration, data flow, and error handling
+- [Component Documentation](docs/components.mdc) - Component architecture, patterns, and implementation
+- [Deployment Guide](docs/deployment.mdc) - Firebase hosting setup and deployment process
+
+### Quick Links
+
+- **Live App**: [https://quiz-app-98108.web.app](https://quiz-app-98108.web.app)
+- **Source Code**: This repository
+- **Firebase Project**: quiz-app-98108
 
 ### Key Architectural Decisions
 
@@ -285,4 +373,5 @@ For questions or issues:
 ---
 
 **Built with modern React patterns and best practices**
+
 # quiz-app

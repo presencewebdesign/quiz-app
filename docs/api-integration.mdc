@@ -1,8 +1,12 @@
 # API Integration Documentation
 
+## Live Application
+
+🌐 **Web App URL**: [https://quiz-app-98108.web.app](https://quiz-app-98108.web.app)
+
 ## API Overview
 
-The quiz application integrates with a mock API that provides Error Find quiz data. The API returns structured data containing two different quiz flows with varying question formats.
+The quiz application integrates with a mock API that provides Error Find quiz data. The API returns structured data containing two different quiz flows with varying question formats. The current implementation successfully fetches data and renders both quiz flows with proper error handling and loading states.
 
 ## API Endpoint
 

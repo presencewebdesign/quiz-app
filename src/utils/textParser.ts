@@ -7,6 +7,15 @@ export const parseStimulus = (stimulus: string): string => {
   );
 };
 
+// Parse feedback text to highlight correct answers in bold
+export const parseFeedback = (feedback: string): string => {
+  // Convert "*text*" to bold text
+  return feedback.replace(
+    /\*([^*]+)\*/g,
+    (match, group1) => `<strong>${group1}</strong>`
+  );
+};
+
 // Extract the error text for comparison
 export const extractError = (stimulus: string): string => {
   const match = stimulus.match(/\*(.*?)\*/);

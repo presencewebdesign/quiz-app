@@ -266,6 +266,12 @@ export const Flow2Quiz = () => {
             </div>
           )}
         </div>
+
+        <div className={styles.navigation}>
+          <Button onClick={() => navigate("/")} variant="secondary">
+            Back to Home
+          </Button>
+        </div>
       </div>
     </div>
   );

@@ -914,6 +914,7 @@ export const Flow2Quiz = () => {
 - **No Error Hints**: Stimulus text displayed without asterisks for increased difficulty
 - **Randomized Answers**: Answer options are shuffled to prevent easy guessing
 - **Bold Highlighting**: Correct answers in feedback are displayed in **bold** using asterisks from JSON
+- **Exit Option**: "Back to Home" button allows users to exit the quiz at any time
 
 #### ScorePage
 

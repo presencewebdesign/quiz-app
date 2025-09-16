@@ -176,3 +176,11 @@
 .actionButtons {
   margin-top: $spacing-lg;
 }
+
+.navigation {
+  display: flex;
+  justify-content: center;
+  margin-top: $spacing-xl;
+  padding-top: $spacing-lg;
+  border-top: 1px solid color.adjust($secondary-color, $lightness: 30%);
+}

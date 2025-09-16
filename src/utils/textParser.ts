@@ -12,7 +12,7 @@ export const parseFeedback = (feedback: string): string => {
   // Convert "*text*" to bold text
   return feedback.replace(
     /\*([^*]+)\*/g,
-    (match, group1) => `<strong>${group1}</strong>`
+    (_, group1) => `<strong>${group1}</strong>`
   );
 };
 

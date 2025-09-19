@@ -1,6 +1,6 @@
-import { createContext, useContext, useReducer, ReactNode } from "react";
+import { createContext, useReducer, ReactNode } from "react";
 import { QuizEngine } from "@/services/quizEngine";
-import type { QuizData, QuizState, ScoreResult } from "@/types/quiz";
+import type { QuizData, QuizState, Question, ScoreResult } from "@/types/quiz";
 
 interface QuizContextType {
   quizData: QuizData;
@@ -17,7 +17,7 @@ interface QuizContextType {
   calculateScore: () => ScoreResult;
 }
 
-const QuizContext = createContext<QuizContextType | null>(null);
+export const QuizContext = createContext<QuizContextType | null>(null);
 
 // Quiz reducer
 type QuizAction =
@@ -112,7 +112,7 @@ export const QuizProvider = ({ children, quizData, flow }: QuizProviderProps) =>
 
   const calculateScore = (): ScoreResult => {
     // Get questions based on flow
-    let questions: any[];
+    let questions: Question[];
     let userAnswersForScoring: Map<string, string>;
     
     if (flow === "flow1") {
@@ -121,15 +121,17 @@ export const QuizProvider = ({ children, quizData, flow }: QuizProviderProps) =>
     } else {
       // For flow2, collect all questions from all rounds with unique identifiers
       questions = [];
-      quizData.activities[1]?.questions?.forEach((round: any, roundIndex: number) => {
-        round.questions.forEach((question: any) => {
-          // Create a unique identifier for each question
-          const uniqueQuestion = {
-            ...question,
-            uniqueId: `${roundIndex}-${question.order}` // This will be used for matching
-          };
-          questions.push(uniqueQuestion);
-        });
+      quizData.activities[1]?.questions?.forEach((round, roundIndex: number) => {
+        if ('questions' in round && Array.isArray(round.questions)) {
+          round.questions.forEach((question: Question) => {
+            // Create a unique identifier for each question
+            const uniqueQuestion: Question = {
+              ...question,
+              uniqueId: `${roundIndex}-${question.order}` // This will be used for matching
+            };
+            questions.push(uniqueQuestion);
+          });
+        }
       });
       
       // Convert Flow2 userAnswers to use unique question identifiers
@@ -159,32 +161,25 @@ export const QuizProvider = ({ children, quizData, flow }: QuizProviderProps) =>
     return score;
   };
 
+  const contextValue: QuizContextType = {
+    quizData,
+    currentFlow: flow,
+    userAnswers: state.userAnswers,
+    currentQuestionIndex: state.currentQuestionIndex,
+    currentRound: state.currentRound,
+    isSubmitting: state.isSubmitting,
+    setAnswer,
+    nextQuestion,
+    previousQuestion,
+    nextRound,
+    resetQuiz,
+    calculateScore,
+  };
+
   return (
-    <QuizContext.Provider
-      value={{
-        quizData,
-        currentFlow: flow,
-        userAnswers: state.userAnswers,
-        currentQuestionIndex: state.currentQuestionIndex,
-        currentRound: state.currentRound,
-        isSubmitting: state.isSubmitting,
-        setAnswer,
-        nextQuestion,
-        previousQuestion,
-        nextRound,
-        resetQuiz,
-        calculateScore,
-      }}
-    >
+    <QuizContext.Provider value={contextValue}>
       {children}
     </QuizContext.Provider>
   );
 };
 
-export const useQuiz = () => {
-  const context = useContext(QuizContext);
-  if (!context) {
-    throw new Error("useQuiz must be used within QuizProvider");
-  }
-  return context;
-};

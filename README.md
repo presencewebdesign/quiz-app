@@ -114,6 +114,9 @@ The application has 3 main parts/screens:
 - **Score Calculation**: Comprehensive scoring system with percentage results
 - **Smart Answer Generation**: Contextually relevant incorrect options
 - **Unique Answer Keys**: Prevents answer collision between rounds
+- **Type Safety**: Full TypeScript coverage with strict type checking
+- **Code Quality**: ESLint + Prettier with zero warnings/errors policy
+- **Modern Hooks**: Separated custom hooks for better maintainability
 
 ## 🛠 Tech Stack
 
@@ -128,11 +131,13 @@ The application has 3 main parts/screens:
 
 ### Development Tools
 
-- **ESLint** - Code linting
-- **Prettier** - Code formatting
+- **ESLint** - Code linting with zero warnings policy
+- **Prettier** - Code formatting with consistent style
+- **TypeScript Strict Mode** - Enhanced type safety
 - **React Error Boundary** - Error handling
 - **SCSS** - Enhanced CSS with variables and mixins
 - **CSS Modules** - Scoped styling
+- **Custom Hooks** - Separated business logic for reusability
 
 ## 📁 Project Structure
 
@@ -152,6 +157,7 @@ src/
 │       └── Layout.tsx           # Main app layout wrapper
 ├── hooks/               # Custom React hooks
 │   ├── useAnswerOptions.ts      # Generates answer choices
+│   ├── useQuiz.ts               # Quiz context hook (separated for fast refresh)
 │   ├── useQuizLogic.ts          # Core quiz state management
 │   └── useFlow2Logic.ts         # Flow 2 specific logic
 ├── services/            # API and external services
@@ -206,11 +212,12 @@ npm run build        # Build for production
 npm run preview      # Preview production build
 
 # Code Quality
-npm run lint         # Run ESLint
-npm run type-check   # Run TypeScript compiler
+npm run lint         # Run ESLint with zero warnings policy
+npm run type-check   # Run TypeScript compiler with strict checks
 
 # Deployment
-npm run deploy       # Build and deploy to Firebase
+npm run deploy       # Build and deploy to Firebase (full deployment)
+npm run deploy:hosting # Build and deploy only hosting to Firebase
 ```
 
 ## 🎮 User Flow & Usage
@@ -269,6 +276,55 @@ npm run deploy       # Build and deploy to Firebase
 - ✅ Score screen with return button (as specified)
 - ✅ API integration (as specified)
 - ✅ Two distinct flows (as specified)
+
+## ✨ Code Quality & Recent Improvements
+
+### Latest Updates (December 2024)
+
+The codebase has been significantly enhanced with modern development practices:
+
+#### 🔧 Linting & Type Safety Improvements
+
+- **Zero Warnings Policy**: ESLint configured with `--max-warnings 0` for strict code quality
+- **TypeScript Strict Mode**: Full type safety with proper type guards and unknown type handling
+- **React Hooks Compliance**: Fixed all hooks rules violations (conditional hooks, dependency arrays)
+- **Fast Refresh Optimization**: Separated hooks and contexts for better development experience
+
+#### 🏗️ Architecture Enhancements
+
+- **Hook Separation**: Moved `useQuiz` to dedicated hook file for better maintainability
+- **Type Guards**: Added proper runtime type checking for API data normalization
+- **Context Optimization**: Improved context structure for better React Fast Refresh support
+- **Import Organization**: Cleaned up imports and dependencies across the codebase
+
+#### 🛡️ Error Handling & Robustness
+
+- **Unknown Type Safety**: Replaced `any` types with `unknown` and proper type guards
+- **Runtime Validation**: Added `isRecord()` and `isArray()` type guards for API data
+- **ESLint Ignore Configuration**: Proper exclusion of build and function directories
+- **Dependency Optimization**: Fixed React Hook dependency arrays for better performance
+
+#### 📋 Resolved Issues
+
+- ✅ Fixed conditional `useEffect` hook calls in Flow2Quiz component
+- ✅ Replaced all `any` types with proper TypeScript types
+- ✅ Fixed missing dependencies in `useMemo` hooks
+- ✅ Separated context and hook exports for React Fast Refresh
+- ✅ Added comprehensive type guards for API data validation
+- ✅ Configured ESLint to ignore Firebase Functions directory
+
+### Development Workflow
+
+```bash
+# Strict linting (zero warnings allowed)
+npm run lint
+
+# Type checking with strict mode
+npm run type-check
+
+# Development with fast refresh
+npm run dev
+```
 
 ## 🔧 API Integration
 
@@ -559,10 +615,13 @@ interface QuizState {
 
 ### Code Style
 
-- ESLint configuration for code quality
-- Prettier for consistent formatting
-- TypeScript strict mode enabled
-- Conventional commit messages
+- **ESLint**: Strict configuration with zero warnings policy
+- **Prettier**: Consistent code formatting across the project
+- **TypeScript**: Strict mode with comprehensive type safety
+- **Type Guards**: Runtime type validation for external data
+- **React Hooks**: Proper dependency management and rules compliance
+- **Modern Patterns**: Separated hooks and contexts for maintainability
+- **Conventional Commits**: Structured commit message format
 
 ## 📄 License
 
@@ -581,16 +640,29 @@ npm install
 npm run build
 ```
 
-**TypeScript Errors:**
+**ESLint/TypeScript Errors:**
 
 ```bash
-# Run type checking
+# Run strict linting (zero warnings policy)
+npm run lint
+
+# Run type checking with strict mode
 npm run type-check
 
-# Common fixes:
+# Recent improvements applied:
+# ✅ All React Hooks rules violations fixed
+# ✅ All 'any' types replaced with proper types
+# ✅ Type guards added for runtime safety
+# ✅ Hook dependencies properly configured
+# ✅ Fast refresh optimizations implemented
+# ✅ ESLint configuration updated for modern practices
+
+# Common fixes for new issues:
 # - Check import paths in src/
 # - Verify type definitions in src/types/
 # - Ensure all props are properly typed
+# - Use type guards for unknown data
+# - Avoid conditional hook calls
 ```
 
 **API Integration Issues:**

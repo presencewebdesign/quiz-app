@@ -1,4 +1,4 @@
-import { useQuiz } from "@/contexts/QuizContext";
+import { useQuiz } from "@/hooks/useQuiz";
 import { Button } from "@/components/common/Button";
 import { QuizProgress } from "@/components/quiz/QuizProgress";
 import { QuestionCard } from "@/components/quiz/QuestionCard";

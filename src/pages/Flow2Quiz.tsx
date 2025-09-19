@@ -1,4 +1,4 @@
-import { useQuiz } from "@/contexts/QuizContext";
+import { useQuiz } from "@/hooks/useQuiz";
 import { QuizProgress } from "@/components/quiz/QuizProgress";
 import { QuestionCard } from "@/components/quiz/QuestionCard";
 import { Button } from "@/components/common/Button";
@@ -20,6 +20,14 @@ export const Flow2Quiz = () => {
 
   const [currentQuestionInRound, setCurrentQuestionInRound] = useState(0);
   const [showScore, setShowScore] = useState(false);
+
+  // Navigate to score screen when quiz is completed
+  useEffect(() => {
+    if (showScore) {
+      const score = calculateScore();
+      navigate("/score", { state: { score, flow: "flow2" } });
+    }
+  }, [showScore, navigate, calculateScore]);
 
   const activity = quizData.activities[1] as unknown as Flow2Activity;
   
@@ -82,15 +90,6 @@ export const Flow2Quiz = () => {
   // Use round and question order to make key unique
   const uniqueKey = `${currentRound}-${currentQuestion.order}`;
   const userAnswer = userAnswers.get(uniqueKey);
-  
-
-  // Navigate to score screen when quiz is completed
-  useEffect(() => {
-    if (showScore) {
-      const score = calculateScore();
-      navigate("/score", { state: { score, flow: "flow2" } });
-    }
-  }, [showScore, navigate, calculateScore]);
 
   // Show loading state while navigating
   if (showScore) {

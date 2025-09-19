@@ -4,6 +4,7 @@ import { QuizProgress } from "@/components/quiz/QuizProgress";
 import { QuestionCard } from "@/components/quiz/QuestionCard";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import type { Question } from "@/types/quiz";
 import styles from "./Flow1Quiz.module.scss";
 
 export const Flow1Quiz = () => {
@@ -20,7 +21,7 @@ export const Flow1Quiz = () => {
   const [showScore, setShowScore] = useState(false);
 
   const activity = quizData.activities[0];
-  const questions = activity.questions;
+  const questions = activity.questions as Question[];
   const currentQuestion = questions[currentQuestionIndex];
   const isLastQuestion = currentQuestionIndex === questions.length - 1;
   const progress = ((currentQuestionIndex + 1) / questions.length) * 100;

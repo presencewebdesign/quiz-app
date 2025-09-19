@@ -11,7 +11,7 @@ export interface BaseQuestion {
 export interface Activity {
   activity_name: string;
   order: number;
-  questions: Question[];
+  questions: (Question | Round)[];
 }
 
 export interface Round {

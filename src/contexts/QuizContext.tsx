@@ -116,7 +116,7 @@ export const QuizProvider = ({ children, quizData, flow }: QuizProviderProps) =>
     let userAnswersForScoring: Map<string, string>;
     
     if (flow === "flow1") {
-      questions = quizData.activities[0]?.questions || [];
+      questions = (quizData.activities[0]?.questions as Question[]) || [];
       userAnswersForScoring = state.userAnswers;
     } else {
       // For flow2, collect all questions from all rounds with unique identifiers

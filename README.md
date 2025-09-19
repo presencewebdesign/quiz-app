@@ -140,15 +140,39 @@ The application has 3 main parts/screens:
 src/
 ├── components/           # Reusable UI components
 │   ├── common/          # Shared components (Button, Loading, etc.)
+│   │   ├── Button.tsx           # Reusable button component
+│   │   ├── LoadingSpinner.tsx   # Loading indicators
+│   │   └── ProgressBar.tsx      # Progress visualization
 │   ├── quiz/            # Quiz-specific components
+│   │   ├── QuestionCard.tsx     # Main question display
+│   │   ├── AnswerOptions.tsx    # Multiple choice options
+│   │   ├── QuizResult.tsx       # Answer feedback display
+│   │   └── QuizProgress.tsx     # Progress tracking
 │   └── layout/          # Layout components
+│       └── Layout.tsx           # Main app layout wrapper
 ├── hooks/               # Custom React hooks
+│   ├── useAnswerOptions.ts      # Generates answer choices
+│   ├── useQuizLogic.ts          # Core quiz state management
+│   └── useFlow2Logic.ts         # Flow 2 specific logic
 ├── services/            # API and external services
+│   ├── quizApiService.ts        # API data fetching
+│   ├── quizEngine.ts            # Core quiz logic & scoring
+│   └── queryClient.ts           # TanStack Query configuration
 ├── types/               # TypeScript type definitions
+│   └── quiz.ts                  # Quiz-related type definitions
 ├── utils/               # Utility functions
+│   └── textParser.ts            # Text parsing helpers
 ├── contexts/            # React contexts for state management
+│   └── QuizContext.tsx          # Global quiz state
 ├── pages/               # Main application screens
+│   ├── HomePage.tsx             # Landing page with flow selection
+│   ├── Flow1Quiz.tsx            # Sequential quiz flow
+│   ├── Flow2Quiz.tsx            # Rounds-based quiz flow
+│   └── ScorePage.tsx            # Final results display
 └── styles/              # CSS/styling files
+    ├── globals.scss             # Global styles
+    ├── variables.scss           # SCSS variables
+    └── mixins.scss              # Reusable SCSS mixins
 ```
 
 ## 🚀 Quick Start
@@ -184,7 +208,6 @@ npm run preview      # Preview production build
 # Code Quality
 npm run lint         # Run ESLint
 npm run type-check   # Run TypeScript compiler
-npm run test         # Run tests
 
 # Deployment
 npm run deploy       # Build and deploy to Firebase
@@ -266,6 +289,120 @@ https://s3.eu-west-2.amazonaws.com/interview.mock.data/payload.json
 - Graceful fallback UI for network errors
 - Loading states with skeleton screens
 
+## 🎯 Answer Generation System
+
+The application intelligently creates multiple choice options by parsing the JSON data from the [API endpoint](https://s3.eu-west-2.amazonaws.com/interview.mock.data/payload.json). Here's how it works:
+
+### Core Data Fields
+
+Each question in the JSON contains:
+
+- **`stimulus`**: The sentence with the error (marked with asterisks)
+- **`feedback`**: The corrected sentence (marked with asterisks)
+- **`is_correct`**: Whether the original stimulus is correct or not
+
+### Example from API Data
+
+```json
+{
+  "stimulus": "I really enjoy *to play football* with friends.",
+  "feedback": "I really enjoy *playing football* with friends.",
+  "is_correct": false
+}
+```
+
+### Answer Option Generation Process
+
+The `QuizEngine.generateAnswerOptions()` method creates 4 answer choices:
+
+#### 1. Extract Correct Answer
+
+```typescript
+// Remove asterisks from feedback to get the correct answer
+const correctAnswer = question.feedback.replace(/\*([^*]+)\*/g, "$1");
+// Result: "I really enjoy playing football with friends."
+```
+
+#### 2. Extract Incorrect Answer
+
+```typescript
+// Remove asterisks from stimulus to get the incorrect answer
+const incorrectAnswer = question.stimulus.replace(/\*([^*]+)\*/g, "$1");
+// Result: "I really enjoy to play football with friends."
+```
+
+#### 3. Generate Intelligent Alternatives
+
+The system analyzes the question pattern and generates contextually relevant alternatives:
+
+**Pattern Recognition Examples:**
+
+- **"haven't finished"** → `["didn't finish", "hasn't finished", "won't finish"]`
+- **"like listening"** → `["likes to listen", "like to listen", "likes listening"]`
+- **"more cheaper"** → `["more cheap", "cheaper", "most cheap"]`
+- **"In the other hand"** → `["On the other hand", "In other hand", "On other hand"]`
+- **Default patterns** → `["playing", "to play", "play"]`
+
+#### 4. Final Answer Options
+
+The system creates 4 options total:
+
+1. **Correct answer** (from feedback)
+2. **Incorrect answer** (from stimulus)
+3. **Two intelligent alternatives** (contextually relevant)
+4. **Randomized order** to prevent easy guessing
+
+### Complete Example
+
+**Input JSON:**
+
+```json
+{
+  "stimulus": "Watching films at home is *more cheaper* than at the cinema.",
+  "feedback": "Watching films at home is *cheaper* than at the cinema."
+}
+```
+
+**Generated Answer Options:**
+
+```typescript
+[
+  {
+    value: "Watching films at home is cheaper than at the cinema.",
+    isCorrect: true,
+  },
+  {
+    value: "Watching films at home is more cheaper than at the cinema.",
+    isCorrect: false,
+  },
+  {
+    value: "Watching films at home is more cheap than at the cinema.",
+    isCorrect: false,
+  },
+  {
+    value: "Watching films at home is most cheap than at the cinema.",
+    isCorrect: false,
+  },
+];
+```
+
+### Technical Implementation
+
+The answer generation is handled by:
+
+- **`QuizEngine.generateAnswerOptions()`** - Main generation logic
+- **`useAnswerOptions()` hook** - React hook for memoized options
+- **`textParser.ts`** - Utility functions for text manipulation
+- **Pattern-based alternatives** - Context-aware incorrect options
+
+This system ensures that:
+
+- ✅ Users see realistic alternatives (not random text)
+- ✅ Options are grammatically related to the question
+- ✅ The correct answer is always present
+- ✅ Options are randomized to prevent pattern recognition
+- ✅ Each question gets exactly 4 choices
+
 ## 🎨 Styling
 
 ### CSS Architecture
@@ -292,22 +429,6 @@ $border-radius: 4px;
 $breakpoint-sm: 576px;
 $breakpoint-md: 768px;
 $breakpoint-lg: 992px;
-```
-
-## 🧪 Testing
-
-### Test Structure
-
-- **Unit Tests**: Component behavior and utility functions
-- **Integration Tests**: User flows and API integration
-- **E2E Tests**: Complete user journeys
-
-### Running Tests
-
-```bash
-npm test                 # Run all tests
-npm run test:watch      # Watch mode
-npm run test:coverage   # Coverage report
 ```
 
 ## 🚀 Deployment
@@ -384,15 +505,57 @@ npm run deploy
 4. **Firebase Hosting**: Reliable deployment with global CDN
 5. **TypeScript**: Type safety and better developer experience
 
+## 🏗️ Development Architecture
+
+### Core Application Flow
+
+```mermaid
+graph TD
+    A[HomePage] --> B[Flow Selection]
+    B --> C[Flow1Quiz - Sequential]
+    B --> D[Flow2Quiz - Rounds]
+    C --> E[ScorePage]
+    D --> E
+    E --> A
+```
+
+### Data Flow Architecture
+
+1. **API Layer**: `quizApiService.ts` fetches data from external API
+2. **State Management**: `QuizContext.tsx` provides global state via React Context
+3. **Business Logic**: `quizEngine.ts` handles scoring and answer generation
+4. **UI Components**: Modular components handle display and user interaction
+5. **Custom Hooks**: Abstract complex logic for reusability
+
+### Key Components Interaction
+
+- **QuizContext** → Provides quiz data and user answers to all components
+- **QuizEngine** → Generates answer options and calculates scores
+- **useAnswerOptions** → Memoizes answer generation for performance
+- **QuestionCard** → Orchestrates question display and answer collection
+- **AnswerOptions** → Handles user input and validation
+
+### State Management Strategy
+
+```typescript
+// Global state structure
+interface QuizState {
+  quizData: QuizData; // API response data
+  userAnswers: Map<string, string>; // User selections by question ID
+  currentRound: number; // For Flow 2 progression
+  loading: boolean; // Loading states
+  error: string | null; // Error handling
+}
+```
+
 ## 🤝 Contributing
 
 ### Development Guidelines
 
 1. Follow TypeScript best practices
 2. Use meaningful component and variable names
-3. Write comprehensive tests
-4. Document complex logic
-5. Follow the established project structure
+3. Document complex logic
+4. Follow the established project structure
 
 ### Code Style
 
@@ -405,6 +568,51 @@ npm run deploy
 
 This project is created as a technical demonstration of modern React development practices.
 
+## 🛠️ Troubleshooting
+
+### Common Development Issues
+
+**Build Errors:**
+
+```bash
+# Clear cache and reinstall dependencies
+rm -rf node_modules package-lock.json
+npm install
+npm run build
+```
+
+**TypeScript Errors:**
+
+```bash
+# Run type checking
+npm run type-check
+
+# Common fixes:
+# - Check import paths in src/
+# - Verify type definitions in src/types/
+# - Ensure all props are properly typed
+```
+
+**API Integration Issues:**
+
+- Verify network connectivity to the API endpoint
+- Check browser console for CORS errors
+- Ensure TanStack Query is properly configured
+- Review `quizApiService.ts` for error handling
+
+**State Management Issues:**
+
+- Check QuizContext provider wraps the app
+- Verify userAnswers Map keys match question IDs
+- Review Flow 2 unique identifier generation
+
+### Debug Mode
+
+Enable detailed logging by uncommenting debug statements in:
+
+- `src/services/quizEngine.ts` (answer generation)
+- `src/contexts/QuizContext.tsx` (state changes)
+
 ## 🆘 Support
 
 For questions or issues:
@@ -412,7 +620,8 @@ For questions or issues:
 1. Check the documentation in the `docs/` folder
 2. Review the component examples
 3. Check the API integration guide
-4. Contact the development team
+4. Review troubleshooting section above
+5. Contact the development team
 
 ---
 

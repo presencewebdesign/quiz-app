@@ -1,5 +1,6 @@
 {
   "projects": {
-    "default": "quiz-app-98108"
+    "default": "quiz-app-98108",
+    "production": "quiz-app-98108"
   }
 }
